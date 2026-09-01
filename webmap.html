@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Map Service - พื้นที่คุ้มครองสิ่งแวดล้อม</title>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #e0f7fa 40%, #f0f9ff 100%);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --card-bg: #ffffff;
+            
+            /* Theme Green (กฎกระทรวง) */
+            --green-main: #10b981;
+            --green-dark: #047857;
+            --green-bg: #ecfdf5;
+            --green-border: #a7f3d0;
+            
+            /* Theme Purple (ประกาศกระทรวง) */
+            --purple-main: #6366f1;
+            --purple-dark: #4338ca;
+            --purple-bg: #eef2ff;
+            --purple-border: #c7d2fe;
+            
+            --shadow-card: 0 4px 12px rgba(15, 23, 42, 0.03);
+            --shadow-hover: 0 10px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0px;
+            padding: 0px;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: 200px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1640px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 36px;
+        }
+
+        /* ---------------- Header ---------------- */
+	.header {
+    position: relative;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('ปกหัว.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    
+    padding: 20px 60px 20px 60px !important; /* ลด padding ด้านล่างเหลือ 10px */
+    box-sizing: border-box;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border-radius: 0 !important;
+    z-index: 10;
+
+    margin-bottom: -10px !important; /* ดันช่องว่างออก หากต้องการให้ชิดขึ้นอีกใส่ค่าติดลบ เช่น -15px !important */
+}
+
+.header::before {
+    display: none !important;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: 1640px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.header-badge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-icon {
+    width: 22px;
+    height: 22px;
+    color: #38bdf8 !important;
+}
+
+.header-tag {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ffffff !important;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.header h1 {
+    font-size: 26px !important;
+    font-weight: 700;
+    color: #ffffff !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+    margin: 0 !important; /* ลบ margin เริ่มต้นของ h1 */
+}
+
+.header p {
+    font-size: 18px !important;
+    color: #f1f5f9 !important;
+    font-weight: 400;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    margin: 0 !important; /* ลบ margin เริ่มต้นของ p ที่ดันขอบล่าง */
+}
+
+        /* ---------------- Layout Grid ---------------- */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 40px;
+        }
+
+        /* ---------------- Sidebar ---------------- */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+/* Dark Total Card (ปรับโครงสร้างเป็นแนวตั้ง และรวมวงกลมตกแต่งเดิมไว้) */
+.stat-card-main {
+    background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%);
+    color: #ffffff;
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 10px 20px rgba(11, 19, 43, 0.15);
+    display: flex;
+    flex-direction: column; /* เปลี่ยนเป็นแนวตั้งเพื่อต่อปุ่มไว้ด้านล่าง */
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* วงกลมตกแต่งมุมขวาล่าง (โค้ดเดิมของคุณ) */
+.stat-card-main::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+    pointer-events: none; /* เพื่อไม่ให้บังการกดปุ่ม */
+}
+
+/* แถบส่วนหัวด้านบน (ไอคอน + ตัวเลข 11 พื้นที่) */
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* ปุ่มเปิดแผนที่ภาพรวม (เพิ่ม Effect สวยงาม) */
+.stat-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* แถบแสงวิ่งผ่าน (Shimmer Light Effect) */
+.stat-card-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    transition: left 0.6s ease;
+}
+
+/* เมื่อนำเมาส์ไปวาง (Hover State) */
+.stat-card-btn:hover {
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+    color: #ffffff;
+    border-color: #38bdf8;
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+}
+
+/* แสงพุ่งผ่านปุ่มเมื่อ Hover */
+.stat-card-btn:hover::before {
+    left: 100%;
+}
+
+/* อิมเมจ/ไอคอนหมุนและขยายเบาๆ เมื่อ Hover */
+.stat-card-btn svg {
+    transition: transform 0.3s ease;
+}
+.stat-card-btn:hover svg {
+    transform: rotate(20deg) scale(1.15);
+}
+        .stat-card-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* วางแทนที่ส่วนนี้ทั้งหมด ---------------- */
+        .stat-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+	.stat-card-info .label {
+    	    font-size: 17px;       
+    	    font-weight: 600;
+    	    line-height: 1.4;
+    	    color: #ffffff;
+    	    white-space: nowrap;
+	}
+
+        .stat-card-info .value {
+            font-size: 15px;
+            font-weight: 400;
+            line-height: 1.3;
+            opacity: 0.85;
+            color: #e2e8f0;
+        }
+        /* ------------------------------------ */
+
+/* Mini Stat Cards */
+        .stat-mini-card {
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .stat-mini-card.green {
+            background: var(--green-bg);
+            border: 1px solid var(--green-border);
+        }
+
+        .stat-mini-card.purple {
+            background: var(--purple-bg);
+            border: 1px solid var(--purple-border);
+        }
+
+        .stat-mini-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* ส่วนบน: ไอคอน + ปุ่มรายละเอียดอยู่ฝั่งขวา */
+        .stat-mini-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-mini-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .green .stat-mini-icon { color: var(--green-dark); }
+        .purple .stat-mini-icon { color: var(--purple-dark); }
+
+        /* ปุ่มรายละเอียดสไตล์ Pill Minimal */
+        .btn-detail-link {
+            font-size: 12.5px;
+            font-weight: 500;
+            background: #ffffff;
+            padding: 5px 11px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        
+        .green .btn-detail-link { 
+            color: var(--green-dark); 
+            border: 1px solid var(--green-border);
+        }
+        
+        .purple .btn-detail-link { 
+            color: var(--purple-dark); 
+            border: 1px solid var(--purple-border);
+        }
+
+        .green .btn-detail-link:hover { 
+            background: var(--green-dark);
+            color: #ffffff;
+            border-color: var(--green-dark);
+        }
+
+        .purple .btn-detail-link:hover {
+            background: var(--purple-dark);
+            color: #ffffff;
+            border-color: var(--purple-dark);
+        }
+
+        /* ส่วนกลาง: บังคับตัดข้อความหัวข้อ 2 บรรทัด */
+        .stat-mini-middle {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-mini-middle .title-main {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .stat-mini-middle .title-sub {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+
+        .green .stat-mini-middle { color: var(--green-dark); }
+        .purple .stat-mini-middle { color: var(--purple-dark); }
+
+        /* ส่วนล่าง: จำนวนพื้นที่/จังหวัด มีเส้นประแบ่ง */
+        .stat-mini-bottom {
+            font-size: 13.5px;
+            font-weight: 600;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(0, 0, 0, 0.08);
+        }
+        
+        .green .stat-mini-bottom { color: var(--green-dark); }
+        .purple .stat-mini-bottom { color: var(--purple-dark); }
+
+        /* ---------------- Main Content Area ---------------- */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .section-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header-left h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill-count {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .pill-count.green { background: var(--green-bg); color: var(--green-dark); border: 1px solid var(--green-border); }
+        .pill-count.purple { background: var(--purple-bg); color: var(--purple-dark); border: 1px solid var(--purple-border); }
+
+        .section-link-btn {
+            background: none;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .section-link-btn.green-link { color: var(--green-dark); }
+        .section-link-btn.purple-link { color: var(--purple-dark); }
+        .section-link-btn:hover { text-decoration: underline; }
+
+        /* Grid Cards Layout */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        /* ---------------- Card UI ---------------- */
+        .zone-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 155px;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .zone-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: #cbd5e1;
+        }
+
+        .zone-card.green-card { border-top: 4px solid var(--green-main); }
+        .zone-card.purple-card { border-top: 4px solid var(--purple-main); }
+
+        .card-top {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .green-card .card-icon { color: var(--green-dark); }
+        .purple-card .card-icon { color: var(--purple-dark); }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .card-desc {
+            font-size: 15px;
+            color: var(--text-sub);
+            font-weight: 400;
+            line-height: 1.45;
+            margin-top: 2px;
+        }
+
+        .card-bottom {
+            margin-top: 14หpx;
+        }
+
+        .btn-map {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .green-card .btn-map { background-color: var(--green-bg); color: var(--green-dark); }
+        .green-card .btn-map:hover { background-color: var(--green-main); color: #ffffff; }
+
+        .purple-card .btn-map { background-color: var(--purple-bg); color: var(--purple-dark); }
+        .purple-card .btn-map:hover { background-color: var(--purple-main); color: #ffffff; }
+
+        /* ---------------- Pop-up Modal ---------------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 620px;
+            width: 100%;
+            padding: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: popupFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        @keyframes popupFade {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .modal-header h3 {
+            font-size: 19px;
+            font-weight: 700;
+            font-style: italic;
+            color: #000000;
+        }
+
+        .modal-header h3 span.highlight-blue {
+            color: #1d4ed8;
+            font-style: italic;
+        }
+
+        .modal-close {
+            background: #f1f5f9;
+            border: none;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-sub);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #e2e8f0; color: var(--text-main); }
+
+        .modal-content-box {
+            background-color: #dbeafe;
+            border-radius: 18px;
+            padding: 20px 24px;
+            color: #0f172a;
+            font-size: 15px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-content-box p {
+            margin: 0;
+            text-indent: 24px;
+        }
+
+/* =========================================================
+   BACKGROUND IMAGE & ANIMATION
+   ========================================================= */
+/* 1. สร้าง Keyframes สำหรับการซูมเข้า-ออก */
+@keyframes breatheSeaview {
+    0% { background-size: 100% auto; }
+    50% { background-size: 110% auto; } /* ซูมเข้าแค่ 10% เพื่อความนุ่มนวล ไม่ให้เวียนหัว */
+    100% { background-size: 100% auto; }
+}
+
+body {
+    background-image: url('seaview3.jpg'); 
+    background-position: top center; 
+    background-repeat: no-repeat;
+    background-color: #eaf8ff; 
+    background-attachment: fixed; 
+    
+    /* 2. เรียกใช้ Animation (ใช้เวลา 40 วินาทีต่อ 1 รอบ) */
+    animation: breatheSeaview 40s ease-in-out infinite;
+    
+    /* ตั้งค่า Layout พื้นฐานเดิม */
+    min-height: 100vh;
+    color: var(--text-main);
+    padding: 20px 30px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ปรับให้ Header และ Sidebar มีความโปร่งแสงเล็กน้อย เพื่อให้เห็นฉากหลังสวยๆ */
+.header, .sidebar, .section-box {
+    position: relative;
+    z-index: 1;
+}
+
+.header::before, .sidebar::before, .section-box::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.65); 
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.header::before {
+    inset: -10px -15px;
+}
+
+.sidebar::before {
+    inset: -15px;
+}
+
+.section-box::before {
+    inset: -15px;
+}
+/* สไตล์พื้นฐานของปุ่มเปิดแผนที่ */
+.map-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+/* ธีมสีเขียว (สำหรับกฎกระทรวง) */
+.green-card .map-btn {
+    background-color: var(--green-bg);
+    color: var(--green-dark);
+}
+.green-card .map-btn:hover {
+    background-color: #dcfce7;
+}
+
+/* ธีมสีม่วง (สำหรับประกาศกระทรวง) - แก้ไขตรงนี้ให้เป็นสีม่วง */
+.purple-card .map-btn {
+    background-color: var(--purple-bg);
+    color: var(--purple-dark);
+}
+.purple-card .map-btn:hover {
+    background-color: #e0e7ff;
+}
+
+/* =========================================================
+   HOVER EFFECTS & ZONE CARDS STYLING
+   ========================================================= */
+
+/* เอฟเฟกต์ยกการ์ดลอยขึ้นเมื่อ Hover ทุกการ์ด */
+.zone-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+}
+
+/* สไตล์พื้นฐานปุ่มเปิดแผนที่ */
+.map-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+/* ธีมสีเขียว (กฎกระทรวง) */
+.green-card .map-btn {
+    background-color: var(--green-bg);
+    color: var(--green-dark);
+}
+.green-card .map-btn:hover {
+    background-color: #dcfce7;
+}
+
+/* ธีมสีม่วง (ประกาศกระทรวง) */
+.purple-card .map-btn {
+    background-color: var(--purple-bg);
+    color: var(--purple-dark);
+}
+.purple-card .map-btn:hover {
+    background-color: #e0e7ff;
+}
+/* =========================================================
+   ภาพพื้นหลังและการตั้งค่าการ์ดรายจังหวัด (ภาพขยับซูม + การ์ดลอย)
+   ========================================================= */
+
+/* 1. ตั้งค่าโครงสร้างหลักของการ์ด */
+.zone-card[class*="-card"] {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px; /* ปรับโค้งมนตามชอบ */
+    overflow: hidden; /* ซ่อนส่วนภาพที่ขยายเกินขอบการ์ด */
+    background-color: #1a1a1a; /* สีกันเหนียวเวลารูปโหลด */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+/* เอฟเฟกต์ยกตัวการ์ดเมื่อเอาเมาส์ชี้ */
+.zone-card[class*="-card"]:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* 2. ชั้นภาพพื้นหลังและฟิล์มดำ (แยกออกมารองรับแอนิเมชันซูมภาพ) */
+.zone-card[class*="-card"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    /* ฟิล์มดำปกติ (เข้ม) */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5));
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background-image 0.6s ease;
+    z-index: 0;
+}
+
+/* เอฟเฟกต์ซูมภาพขยายขึ้น + ปรับฟิล์มให้สว่างขึ้น (70-80%) เมื่อเอาเมาส์ชี้ */
+.zone-card[class*="-card"]:hover::before {
+    transform: scale(1.1); /* ขยายภาพให้ดูเคลื่อนไหวแบบมีมิติ */
+    /* ฟิล์มดำบางลงเหลือความมืดแค่ 5-10% ทำให้ภาพสว่างชัดขึ้นตามต้องการ */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1));
+}
+
+/* ให้เนื้อหาข้างในการ์ดอยู่เหนือชั้นภาพพื้นหลังเสมอ */
+.zone-card[class*="-card"] > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================================================
+   กำหนดรูปภาพแยกตามรายจังหวัด
+   ========================================================= */
+
+/* 1. จังหวัดมหาสารคาม */
+.zone-card.mahasarakham-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.5)), url('dun_lamphan.jpg');
+    background-position: 80% 85%;
+}
+.zone-card.mahasarakham-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('dun_lamphan.jpg');
+}
+
+/* 2. จังหวัดเชียงใหม่-ลำพูน */
+.zone-card.chiangmai-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('yangna.jpg');
+}
+.zone-card.chiangmai-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('yangna.jpg');
+}
+
+/* 3. จังหวัดสมุทรปราการ (คุ้งบางกะเจ้า) */
+.zone-card.bangkrajao-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('bangkrajao.jpg');
+}
+.zone-card.bangkrajao-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('bangkrajao.jpg');
+}
+
+/* 4. จังหวัดเพชรบุรีและประจวบคีรีขันธ์ */
+.zone-card.phetburi-prachuap-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('phetburi_prachuap.jpg');
+}
+.zone-card.phetburi-prachuap-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('phetburi_prachuap.jpg');
+}
+
+/* 5. จังหวัดตาก */
+.zone-card.tak-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('Tak.jpg');
+}
+.zone-card.tak-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('Tak.jpg');
+}
+
+/* 6. จังหวัดระยอง */
+.zone-card.rayong-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('rayong.jpg');
+}
+.zone-card.rayong-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('rayong.jpg');
+}
+
+/* 7. จังหวัดชลบุรี */
+.zone-card.chonburi-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('chonburi.jpg');
+}
+.zone-card.chonburi-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('chonburi.jpg');
+}
+
+/* 8. จังหวัดสุราษฎร์ธานี */
+.zone-card.suratthani-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('suratthani.jpg');
+}
+.zone-card.suratthani-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('suratthani.jpg');
+}
+
+/* 9. จังหวัดพังงา */
+.zone-card.phangnga-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('phangnga.jpg');
+}
+.zone-card.phangnga-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('phangnga.jpg');
+}
+
+/* 10. จังหวัดกระบี่ */
+.zone-card.krabi-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('krabi.jpg');
+}
+.zone-card.krabi-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('krabi.jpg');
+}
+
+/* 11. จังหวัดภูเก็ต */
+.zone-card.phuket-card::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('phuket.jpg');
+}
+.zone-card.phuket-card:hover::before {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1)), url('phuket.jpg');
+}
+
+/* =========================================================
+   การตั้งค่าสีข้อความและปุ่ม
+   ========================================================= */
+.zone-card[class*="-card"] .card-title,
+.zone-card[class*="-card"] .card-desc,
+.zone-card[class*="-card"] .card-icon {
+    color: #ffffff !important;
+    transition: color 0.3s ease;
+}
+
+.zone-card[class*="-card"] .map-btn {
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.zone-card[class*="-card"]:hover .map-btn {
+    transform: translateY(-2px);
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* สไตล์ข้อความมาตราในหัวข้อ */
+.sub-title {
+    font-size: 15px;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+/* ปรับปรุงสไตล์ปุ่มลิงก์เอกสาร */
+.section-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.green-link {
+    color: #059669;
+    background-color: #ecfdf5;
+    border: 1px solid #a7f3d0;
+}
+.green-link:hover {
+    background-color: #d1fae5;
+}
+
+.purple-link {
+    color: #4f46e5;
+    background-color: #eeeafe;
+    border: 1px solid #c7d2fe;
+}
+.purple-link:hover {
+    background-color: #e0e7ff;
+}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Header Section -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-badge-wrap">
+                <!-- Leaf Icon -->
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                <span class="header-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    Web Map Service
+                </span>
+            </div>
+            <h1>พื้นที่คุ้มครองสิ่งแวดล้อม</h1>
+            <p>เลือกคลิกพื้นที่เพื่อเปิดเข้าสู่ระบบแผนที่สารสนเทศภูมิศาสตร์ (Web Map) แยกตามกฎกระทรวงและประกาศกระทรวง</p>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="main-layout">
+        
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                ภาพรวมข้อมูล
+            </div>
+
+            <!-- Total Card -->
+            <div class="stat-card-main">
+                <div class="stat-card-header">
+                    <div class="stat-card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.91a2 2 0 0 1-1.66 0L3 12.5"/><path d="m22 17.5-8.58 3.91a2 2 0 0 1-1.66 0L3 17.5"/></svg>
+                    </div>
+                    <div class="stat-card-info">
+                        <div class="label">พื้นที่คุ้มครองสิ่งแวดล้อม</div>
+                        <div class="value">11 พื้นที่</div>
+                    </div>
+                </div>
+
+                <!-- ปุ่มเปิดแผนที่ภาพรวม -->
+                <a href="epa_all_zone/epa_all_zoneweb.html" target="_blank" class="stat-card-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <span>เปิดแผนที่ภาพรวม 11 พื้นที่</span>
+                </a>
+            </div>
+
+            <!-- Mini Stat 1: กฎกระทรวง -->
+<div class="stat-mini-card green">
+    <div class="stat-mini-top">
+        <div class="stat-mini-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <button class="btn-detail-link" onclick="openModal('reg')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            รายละเอียด
+        </button>
+    </div>
+
+    <!-- แก้ไขจุดนี้: แยกเป็น 2 บรรทัด -->
+    <div class="stat-mini-middle">
+        <div class="title-main">กฎกระทรวง</div>
+        <div class="title-sub">(มาตรา 43)</div>
+    </div>
+
+    <div class="stat-mini-bottom">5 พื้นที่ 6 จังหวัด</div>
+</div>
+
+<!-- Mini Stat 2: ประกาศกระทรวง -->
+            <div class="stat-mini-card purple">
+                <div class="stat-mini-top">
+                    <div class="stat-mini-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <button class="btn-detail-link" onclick="openModal('ann')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        รายละเอียด
+                    </button>
+                </div>
+                <div class="stat-mini-middle">
+                    <div class="title-main">ประกาศกระทรวง</div>
+                    <div class="title-sub">(มาตรา 45)</div>
+                </div>
+                <div class="stat-mini-bottom">6 พื้นที่ 7 จังหวัด</div>
+            </div>
+        </div>
+
+        <!-- Right Content Section -->
+        <div class="content-area">
+            
+            <!-- Section 1: กฎกระทรวง -->
+            <div class="section-box">
+                <div class="section-header green-bg">
+                    <div class="section-header-left">
+                        <h2>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                            กฎกระทรวง <span class="sub-title">(มาตรา 43)</span>
+                        </h2>
+                        <span class="pill-count green">5 พื้นที่ 6 จังหวัด</span>
+                    </div>
+                    
+                    <!-- ปุ่มลิงก์เอกสาร (แทนที่ปุ่มรายละเอียดเดิม) -->
+                    <a href="https://www.onep.go.th/%e0%b8%81%e0%b8%8e%e0%b8%81%e0%b8%a3%e0%b8%b0%e0%b8%97%e0%b8%a3%e0%b8%a7%e0%b8%87/" target="_blank" class="section-link-btn green-link" style="text-decoration: none;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        เอกสารกฎกระทรวง
+                    </a>
+                </div>
+
+                <div class="cards-grid">
+                    <!-- Card 1 -->
+                    <div class="zone-card green-card chiangmai-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L7 10h10l-5-8z"/><path d="M12 9l-7 11h14l-7-11z"/><path d="M12 20v2"/></svg>
+                                <span class="card-title">จังหวัดเชียงใหม่ และจังหวัดลำพูน</span>
+                            </div>
+                            <div class="card-desc">ถนนต้นยางนา</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของเชียงใหม่.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="zone-card green-card tak-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                                <span class="card-title">จังหวัดตาก</span>
+                            </div>
+                            <div class="card-desc">3 ตำบลในอำเภอแม่สอด (ตำบลพระธาตุผาแดง, แม่ตาว, แม่กุ)</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของตาก.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="zone-card green-card rayong-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.6 2 5.1 2 2.5 0 2.5-2 5.1-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5 2 2.6 0 2.6 2 5.1 2 2.5 0 2.5-2 5.1-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5 2 2.6 0 2.6 2 5.1 2 2.5 0 2.5-2 5.1-2 1.3 0 1.9.5 2.5 1"/></svg>
+                                <span class="card-title">จังหวัดระยอง</span>
+                            </div>
+                            <div class="card-desc">3 อำเภอ (อำเภอปลวกแดง, อำเภอบ้านค่าย และอำเภอนิคมพัฒนา)</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของระยอง.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="zone-card green-card mahasarakham-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9.01" y2="6"/><line x1="15" y1="6" x2="15.01" y2="6"/><line x1="9" y1="10" x2="9.01" y2="10"/><line x1="15" y1="10" x2="15.01" y2="10"/><path d="M10 16h4v6h-4z"/></svg>
+                                <span class="card-title">จังหวัดมหาสารคาม</span>
+                            </div>
+                            <div class="card-desc">บริเวณป่าดูนลำพัน</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของมหาสารคาม.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 5 -->
+                    <div class="zone-card green-card bangkrajao-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 20h10"/><path d="M10 20c0-3 1.5-5 2-8"/><path d="M12 12c-3 0-6-3-6-7 4 0 7 3 6 7Z"/><path d="M12 12c3 0 6-3 6-7-4 0-7 3-6 7Z"/></svg>
+                                <span class="card-title">จังหวัดสมุทรปราการ</span>
+                            </div>
+                            <div class="card-desc">พื้นที่คุ้งบางกะเจ้า</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของสมุทรปราการ.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!-- Section 2: ประกาศกระทรวง -->
+            <div class="section-box">
+                <div class="section-header purple-bg">
+                    <div class="section-header-left">
+                        <h2>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            ประกาศกระทรวง <span class="sub-title">(มาตรา 45)</span>
+                        </h2>
+                        <span class="pill-count purple">6 พื้นที่ 7 จังหวัด</span>
+                    </div>
+                    
+                    <!-- ปุ่มลิงก์เอกสาร (แทนที่ปุ่มรายละเอียดเดิม) -->
+                    <a href="https://www.onep.go.th/%e0%b8%9b%e0%b8%a3%e0%b8%b0%e0%b8%81%e0%b8%b2%e0%b8%a8%e0%b8%81%e0%b8%a3%e0%b8%b0%e0%b8%97%e0%b8%a3%e0%b8%a7%e0%b8%87/" target="_blank" class="section-link-btn purple-link" style="text-decoration: none;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        เอกสารประกาศกระทรวง
+                    </a>
+                </div>
+
+                <div class="cards-grid">
+                    <!-- Card 1 -->
+                    <div class="zone-card purple-card phetburi-prachuap-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                                <span class="card-title">จังหวัดเพชรบุรี และจังหวัดประจวบคีรีขันธ์</span>
+                            </div>
+                            <div class="card-desc">พื้นที่ชายฝั่งทะเล อ.บ้านแหลม, เมืองเพชรบุรี, ท่ายาง, ชะอำ, หัวหิน, ปราณบุรี</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของเพชรบุรีประจวบ.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="zone-card purple-card chonburi-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5 2 2.6 0 2.6 2 5.1 2 2.5 0 2.5-2 5.1-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5 2 2.6 0 2.6 2 5.1 2 2.5 0 2.5-2 5.1-2 1.3 0 1.9.5 2.5 1"/></svg>
+                                <span class="card-title">จังหวัดชลบุรี</span>
+                            </div>
+                            <div class="card-desc">บริเวณเมืองพัทยา, อำเภอบางละมุง และอำเภอสัตหีบ</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="chonburiweb/chonburi.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="zone-card purple-card suratthani-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M10 16h4v6h-4z"/></svg>
+                                <span class="card-title">จังหวัดสุราษฎร์ธานี</span>
+                            </div>
+                            <div class="card-desc">บริเวณเกาะสมุย, เกาะพะงัน และเกาะเต่า</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของสุราษฎร์ธานี.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="zone-card purple-card phangnga-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                                <span class="card-title">จังหวัดพังงา</span>
+                            </div>
+                            <div class="card-desc">พื้นที่แนวชายฝั่งทะเล</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของพังงา.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 5 -->
+                    <div class="zone-card purple-card krabi-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <span class="card-title">จังหวัดกระบี่</span>
+                            </div>
+                            <div class="card-desc">อำเภออ่าวลึก, เมืองกระบี่, เหนือคลอง, คลองท่อม และเกาะลันตา</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="ลิงก์_WebMap_ของกระบี่.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 6 -->
+                    <div class="zone-card purple-card phuket-card">
+                        <div class="card-top">
+                            <div class="card-title-row">
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+                                <span class="card-title">จังหวัดภูเก็ต</span>
+                            </div>
+                            <div class="card-desc">พื้นที่ทั้งจังหวัด</div>
+                        </div>
+                        <div class="card-bottom">
+                            <a href="phuketweb/phuket.html" target="_blank" class="map-btn">
+                                <span>เปิดแผนที่ Web Map</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dialog -->
+<div class="modal-overlay" id="infoModal" onclick="closeModalOnOverlay(event)">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="modalTitle"></h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-content-box" id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+    const modalData = {
+        reg: {
+            title: `กรณีการออกเป็น <span class="highlight-blue">“กฎกระทรวง”</span>`,
+            content: `
+                <p>ต้องปรากฏว่าเป็นพื้นที่ที่เข้าข่ายตามมาตรา 43 ทั้งนี้ การออกเป็นกฎกระทรวงจะมีผลบังคับใช้ต่อเนื่องจนกว่าจะมีการปรับปรุงกฎกระทรวง</p>
+                <p>เนื่องจากพื้นที่ที่ได้รับการประกาศเขตพื้นที่คุ้มครองสิ่งแวดล้อมนั้น ไม่มีกฎหมายเพื่อการอนุรักษ์คุ้มครองดูแลพื้นที่ กฎกระทรวงจะทำหน้าที่สงวนรักษาไว้ซึ่งความสมบูรณ์ของทรัพยากรธรรมชาติและสิ่งแวดล้อมที่มีอยู่</p>
+            `
+        },
+        ann: {
+            title: `กรณีการออกเป็น <span class="highlight-blue">“ประกาศกระทรวง”</span>`,
+            content: `
+                <p>ต้องปรากฏว่าเป็นพื้นที่ที่เข้าข่ายตามมาตรา 45 ทั้งนี้ การออกเป็นประกาศกระทรวงฯ จะมีระยะเวลาในการบังคับใช้เป็นระยะเวลา 5 ปี หลังจากประกาศลงในราชกิจจานุเบกษาแล้ว</p>
+                <p>เนื่องจากประกาศกระทรวงฯ จะทำหน้าที่เสริมกฎหมายอื่น ๆ ที่มีอยู่ในพื้นที่นั้นแล้ว โดยจะทำหน้าที่ฟื้นฟูคุณภาพสิ่งแวดล้อม และทรัพยากรธรรมชาติที่เสื่อมโทรมจนอยู่ในภาวะวิกฤตให้มีสภาพดีขึ้น ซึ่งเมื่อเข้าสู่ภาวะปกติแล้ว ก็ให้เป็นกลไกของกฎหมายที่มีอยู่เดิมในพื้นที่ทำหน้าที่คุ้มครอง ควบคุมพื้นที่ต่อไป</p>
+            `
+        }
+    };
+
+    function openModal(type) {
+        const data = modalData[type];
+        if (!data) return;
+        document.getElementById('modalTitle').innerHTML = data.title;
+        document.getElementById('modalContent').innerHTML = data.content;
+        document.getElementById('infoModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('infoModal').classList.remove('active');
+    }
+
+    function closeModalOnOverlay(e) {
+        if (e.target.id === 'infoModal') {
+            closeModal();
+        }
+    }
+</script>
+
+</body>
+</html>
