@@ -1,0 +1,1985 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+        <style>
+        .basemap-control-box {
+            position: absolute;
+            bottom: 80px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            font-family: sans-serif;
+            font-size: 12px;
+            min-width: 230px;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        .basemap-control-box.box-hidden {
+            transform: translateX(-280px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .btn-toggle-basemap-fixed {
+            position: absolute;
+            bottom: 35px;
+            left: 10px;
+            z-index: 1001;
+            background: #fff;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+        }
+        .btn-toggle-basemap-fixed:hover {
+            background: #f4f4f4;
+            color: #000;
+        }
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .custom-control-box {
+            position: absolute;
+            top: 10px;
+            right: 55px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            font-family: sans-serif;
+            font-size: 13px;
+            max-height: 88vh;
+            overflow-y: auto;
+            width: 310px;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        .custom-control-box.sidebar-hidden {
+            transform: translateX(350px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .btn-toggle-sidebar-fixed {
+            position: absolute;
+            top: 85px;
+            right: 10px;
+            z-index: 1001;
+            background: #fff;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+        }
+        .btn-toggle-sidebar-fixed:hover {
+            background: #f4f4f4;
+            color: #000;
+        }
+        .zone-filter-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+            cursor: pointer;
+        }
+        .zone-filter-item input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            display: inline-block;
+            border-radius: 2px;
+            margin-right: 6px;
+            border: 1px solid rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .btn-pdf {
+            background-color: #007bff;
+            color: white !important;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 90%;
+            font-size: 12px;
+        }
+        .btn-pdf:hover { background-color: #0056b3; }
+        .btn-pdf-extension {
+            background-color: #17a2b8;
+            color: white !important;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 90%;
+            font-size: 12px;
+        }
+        .btn-pdf-extension:hover { background-color: #138496; }
+        .btn-landsmap {
+            background-color: #ff9800;
+            color: white !important;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 90%;
+            font-size: 12px;
+        }
+        .btn-landsmap:hover { background-color: #e68a00; }
+        .btn-gis-action {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        .btn-gis-action:hover { background-color: #218838; }
+        .coord-input {
+            width: 93%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .filter-select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 6px;
+            background: #fff;
+        }
+        .filter-select:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .drawn-list-container {
+            max-height: 280px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            margin-top: 5px;
+            padding: 6px;
+        }
+        .drawn-item-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        .drawn-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 4px;
+            gap: 6px;
+        }
+        .drawn-control-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        .drawn-control-row label {
+            font-size: 11px;
+            color: #444;
+            white-space: nowrap;
+        }
+        .drawn-control-row input[type="color"] {
+            width: 28px;
+            height: 22px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+        .drawn-control-row select {
+            padding: 2px 4px;
+            font-size: 11px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #fff;
+        }
+        .drawn-control-row input[type="range"] {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        .btn-sm-action {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 10px;
+        }
+        .btn-sm-action:hover { background: #e2e6ea; }
+
+        .custom-popup-table {
+            font-family: sans-serif;
+            font-size: 12px;
+            width: 100%;
+        }
+        .custom-popup-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .custom-popup-table th, .custom-popup-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: top;
+            text-align: left;
+        }
+        .custom-popup-table th {
+            color: #333;
+            background-color: #f4f6f8;
+            width: 38%;
+            font-weight: 600;
+            border-right: 1px solid #e0e0e0;
+        }
+        .custom-popup-table td {
+            color: #222;
+        }
+        .custom-popup-table tr:last-child th,
+        .custom-popup-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .popup-btn-container {
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .popup-btn {
+            padding: 7px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white !important;
+            text-align: center;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            display: block;
+        }
+        .popup-btn-sv { background-color: #28a745; }
+        .popup-btn-sv:hover { background-color: #218838; }
+        .popup-btn-gm { background-color: #dc3545; }
+        .popup-btn-gm:hover { background-color: #c82333; }
+        .popup-btn-pdf { background-color: #007bff; }
+        .popup-btn-pdf:hover { background-color: #0056b3; }
+        .popup-btn-measure { background-color: #6f42c1; cursor: pointer; border: none; width: 100%; }
+        .popup-btn-measure:hover { background-color: #5a32a3; }
+
+        .measure-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            font-family: sans-serif;
+        }
+        .measure-modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 750px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .measure-close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .measure-close-btn:hover,
+        .measure-close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .measure-modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #6f42c1;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #6f42c1;
+            padding-bottom: 5px;
+        }
+        .measure-modal-body {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .measure-modal-body ul {
+            padding-left: 20px;
+            margin: 5px 0;
+        }
+        .measure-modal-body li {
+            margin-bottom: 6px;
+        }
+
+        .search-highlight-label {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #0d47a1;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        </style>
+        <title>Chonburi Zone Map</title>
+    </head>
+    <body>
+        <div id="basemapControlBox" class="basemap-control-box">
+            <div style="font-weight: bold; margin-bottom: 6px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">🗺️ เลือกแผนที่ฐาน:</div>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="radio" name="baseLayer" value="hybrid" checked onclick="changeBaseLayer(this.value)"> Google Hybrid (ดาวเทียม+ถนน)</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="radio" name="baseLayer" value="satellite" onclick="changeBaseLayer(this.value)"> Google Satellite (ดาวเทียมล้วน)</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="radio" name="baseLayer" value="esri" onclick="changeBaseLayer(this.value)"> Esri World Imagery</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="radio" name="baseLayer" value="osm" onclick="changeBaseLayer(this.value)"> OpenStreetMap</label>
+            <label style="display: block; margin-bottom: 8px; cursor: pointer;"><input type="radio" name="baseLayer" value="topo" onclick="changeBaseLayer(this.value)"> OpenTopoMap (ภูมิประเทศ)</label>
+
+            <div style="font-weight: bold; margin-top: 8px; margin-bottom: 6px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">🗂️ เปิด-ปิดเลเยอร์ข้อมูล:</div>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="checkbox" id="layerLandsman" checked onclick="toggleOverlayLayer('landsman', this.checked)"> กรมที่ดิน (โฉนดที่ดิน WMS)</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="checkbox" id="layerZone" checked onclick="toggleOverlayLayer('zone', this.checked)"> zone_chonburiepazone</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="checkbox" id="layerPazone" checked onclick="toggleOverlayLayer('pazone', this.checked)"> chonburiepazone (พื้นที่คุ้มครอง)</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="checkbox" id="layerAmphoe" checked onclick="toggleOverlayLayer('amphoe', this.checked)"> ขอบเขตอำเภอ (AMPHOE_T)</label>
+            <label style="display: block; margin-bottom: 4px; cursor: pointer;"><input type="checkbox" id="layerTambon" checked onclick="toggleOverlayLayer('tambon', this.checked)"> ขอบเขตตำบล (TAM_NAM_T)</label>
+            <label style="display: block; cursor: pointer;"><input type="checkbox" id="layerDrawn" checked onclick="toggleOverlayLayer('drawn', this.checked)"> รูปทรงที่วาด/นำเข้า</label>
+        </div>
+
+        <button id="toggleBasemapBtn" class="btn-toggle-basemap-fixed" onclick="toggleBasemapBox()" title="ซ่อน/แสดงแผนที่ฐาน">🗺️</button>
+        <button id="toggleSidebarBtn" class="btn-toggle-sidebar-fixed" onclick="toggleSidebar()" title="ซ่อน/แสดงแผงควบคุม">⚙️</button>
+
+        <div id="controlSidebar" class="custom-control-box">
+            <div style="margin-bottom: 4px; text-align: center;">
+                <a href="https://www.onep.go.th/wp-content/uploads/2020/08/2563-07-24-onep-announcement.pdf" target="_blank" class="btn-pdf">
+                    📄 ประกาศกระทรวงฯ จ.ชลบุรี (PDF)
+                </a>
+                <a href="https://www.onep.go.th/wp-content/uploads/2025/04/2568-04-28-p35-mnre-announcement.pdf" target="_blank" class="btn-pdf-extension">
+                    📄 ขยายระยะเวลาประกาศกระทรวงฯ จ.ชลบุรี (PDF)
+                </a>
+                <a href="https://landsmaps.dol.go.th/" target="_blank" class="btn-landsmap">
+                    🔍 ค้นหาแปลงที่ดิน/โฉนด (LandsMaps)
+                </a>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 8px 0;">
+            <b>📍 ปักหมุด / ค้นหาพิกัด (Lat, Long)</b>
+            <div style="margin-top: 5px;">
+                <button id="btnTogglePinMode" class="btn-gis-action" style="background-color: #e65100; margin-bottom: 6px;" onclick="toggleClickPinMode()">📍 เปิดโหมดคลิกปักหมุดด่วน (ปิดอยู่)</button>
+                <input type="text" id="coordInput" class="coord-input" placeholder="เช่น 13.3611, 100.9847">
+                <button class="btn-gis-action" style="background-color: #007bff;" onclick="searchCoordinates()">🔍 ค้นหาตำแหน่งและปักหมุด</button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 8px 0;">
+            <b>📌 กรองตามขอบเขตการปกครอง</b>
+            <div style="margin-top: 5px;">
+                <label style="font-size: 11px; color: #555;">อำเภอ:</label>
+                <select id="amphoeFilter" class="filter-select" onchange="onAmphoeChange()">
+                    <option value="">-- กรุณาเลือกอำเภอ --</option>
+                </select>
+                <label style="font-size: 11px; color: #555;">ตำบล:</label>
+                <select id="tambonFilter" class="filter-select" onchange="onTambonChange()" disabled>
+                    <option value="">-- กรุณาเลือกอำเภอก่อน --</option>
+                </select>
+                <button class="btn-gis-action" style="background-color: #007bff;" onclick="confirmAdministrativeFilter()">🔍 ค้นหา/ซูมพื้นที่</button>
+                <button class="btn-gis-action" style="background-color: #6c757d; margin-top: 4px;" onclick="resetAdministrativeFilters()">🔄 รีเซ็ตขอบเขต</button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 8px 0;">
+            <b>จัดการข้อมูลรูปทรง (GIS Data)</b>
+            <div style="margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #555; margin-bottom: 2px;">
+                    <span><b>📋 รายการที่วาด/นำเข้า:</b> <span id="drawnItemCount">0</span> รายการ</span>
+                    <button class="btn-sm-action" onclick="zoomToAllDrawn()" title="ซูมดูทั้งหมด">🌍 ทั้งหมด</button>
+                </div>
+                <div id="drawnItemList" class="drawn-list-container">
+                    <div style="text-align: center; color: #888; font-size: 11px; padding: 10px;">ยังไม่มีข้อมูลรูปทรง</div>
+                </div>
+            </div>
+
+            <label style="font-size: 11px; color: #555; margin-top: 6px; display: block;">เลือกรูปแบบ Export (ทั้งหมด):</label>
+            <select id="exportFormatSelect" class="filter-select">
+                <option value="geojson">GeoJSON (.geojson)</option>
+                <option value="kml">KML (.kml)</option>
+                <option value="shp">Shapefile (.zip)</option>
+            </select>
+            <button id="btn-export-all" class="btn-gis-action">📥 ส่งออกข้อมูลทั้งหมด (Export)</button>
+
+            <button class="btn-gis-action" style="background-color: #17a2b8;" onclick="document.getElementById('importGISInput').click();">📤 นำเข้าข้อมูล (GeoJSON/SHP/KML)</button>
+            <button class="btn-gis-action" style="background-color: #dc3545;" onclick="clearAllDrawnItems()">🗑️ ล้างรูปทรงทั้งหมด</button>
+            <input type="file" id="importGISInput" accept=".geojson,.json,.zip,.kml" style="display:none;" onchange="importGISData(event)">
+            
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 8px 0;">
+            <div style="margin-bottom: 5px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <b>ปรับความจางเขตพื้นที่คุ้มครอง</b>
+                    <span id="opacityValueText" style="font-weight: bold; color: #007bff; background: #eef9ff; padding: 1px 6px; border-radius: 4px; border: 1px solid #bce8f1;">100%</span>
+                </div>
+                <input type="range" id="opacitySlider" min="0" max="1" step="0.05" value="1.0" style="width: 100%; margin-top: 6px; cursor: pointer;">
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 8px 0;">
+            <b>เลือกแสดงผลโซน (Zone Filter)</b>
+            <div class="zone-filter-item" style="margin-top: 6px; font-weight: bold; border-bottom: 1px dashed #ddd; padding-bottom: 4px;">
+                <input type="checkbox" id="selectAllZones" checked onchange="toggleSelectAllZones(this)">
+                <span>เลือกทั้งหมด / ยกเลิก</span>
+            </div>
+            <div style="margin-top: 4px;" id="zoneFilterList"></div>
+        </div>
+
+        <div id="measureModal" class="measure-modal">
+            <div class="measure-modal-content">
+                <span class="measure-close-btn" onclick="closeMeasureModal()">&times;</span>
+                <div id="measureModalTitle" class="measure-modal-title">มาตรการคุ้มครองสิ่งแวดล้อม</div>
+                <div id="measureModalBody" class="measure-modal-body"></div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+        <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+        <script src="https://unpkg.com/@mapbox/togeojson@0.16.0/togeojson.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tokml/0.4.0/tokml.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="https://unpkg.com/shp-write@latest/shpwrite.js"></script>
+
+        <script src="data/zone_chonburiepazone_0.js"></script>
+        <script src="data/chonburiepazone_1.js"></script>
+        <script src="data/chonburiepazone1_0.js"></script>
+        <script src="data/chonburiepazone2_1.js"></script>
+        <script src="data/AMPHOE_T_2.js"></script>
+        <script src="data/TAM_NAM_T_3.js"></script>
+
+        <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('controlSidebar');
+            var btn = document.getElementById('toggleSidebarBtn');
+            sidebar.classList.toggle('sidebar-hidden');
+            if (sidebar.classList.contains('sidebar-hidden')) {
+                btn.innerHTML = '⚙️';
+                btn.title = "แสดงแผงควบคุม";
+            } else {
+                btn.innerHTML = '✖';
+                btn.title = "ซ่อนแผงควบคุม";
+            }
+        }
+
+        function toggleBasemapBox() {
+            var box = document.getElementById('basemapControlBox');
+            var btn = document.getElementById('toggleBasemapBtn');
+            box.classList.toggle('box-hidden');
+            if (box.classList.contains('box-hidden')) {
+                btn.innerHTML = '🗺️';
+                btn.title = "แสดงแผนที่ฐาน";
+            } else {
+                btn.innerHTML = '✖';
+                btn.title = "ซ่อนแผนที่ฐาน";
+            }
+        }
+
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+
+        function removeEmptyRowsFromPopupContent(content, feature) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var rows = tempDiv.querySelectorAll('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var td = rows[i].querySelector('td.visible-with-data');
+                var key = td ? td.id : '';
+                if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                    rows[i].parentNode.removeChild(rows[i]);
+                }
+            }
+            return tempDiv.innerHTML;
+        }
+
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                }
+            }
+        }
+
+        var map = L.map('map', {
+            zoomControl: false, maxZoom: 22, minZoom: 1
+        }).fitBounds([[12.787915752642528,100.60754598576767],[13.079212668914575,101.10087425796372]]);
+
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="Leaflet">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        L.control.locate({ locateOptions: { maxZoom: 19 } }).addTo(map);
+        L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
+
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+
+        var baseLayers = {
+            hybrid: L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 22, maxNativeZoom: 20, subdomains: ['mt0','mt1','mt2','mt3'], attribution: 'Google Hybrid' }),
+            satellite: L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 22, maxNativeZoom: 20, subdomains: ['mt0','mt1','mt2','mt3'], attribution: 'Google Satellite' }),
+            esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 22, maxNativeZoom: 19, attribution: 'Esri World Imagery' }),
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22, maxNativeZoom: 19, attribution: 'OpenStreetMap' }),
+            topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 22, maxNativeZoom: 17, attribution: 'OpenTopoMap' })
+        };
+        baseLayers.hybrid.addTo(map);
+
+        function changeBaseLayer(layerName) {
+            Object.values(baseLayers).forEach(function(lyr) { if (map.hasLayer(lyr)) map.removeLayer(lyr); });
+            if (baseLayers[layerName]) baseLayers[layerName].addTo(map);
+        }
+
+        map.createPane('pane_LongdoParcel');
+        map.getPane('pane_LongdoParcel').style.zIndex = 402;
+        var landParcelWMS = L.tileLayer.wms('https://ms.longdo.com/mapproxy/service', {
+            layers: 'dol', 
+            format: 'image/png', 
+            transparent: true, 
+            pane: 'pane_LongdoParcel',
+            opacity: 0.85,
+            attribution: 'กรมที่ดิน (Longdo Map Proxy)',
+            minZoom: 1, 
+            maxZoom: 22,
+            maxNativeZoom: 20,
+            keepBuffer: 6,
+            updateWhenZooming: false,
+            updateWhenIdle: false
+        });
+        landParcelWMS.addTo(map);
+
+        var bounds_group = new L.featureGroup([]);
+
+        function pop_zone_chonburiepazone_0(feature, layer) {
+            var popupContent = '<div class="custom-popup-table"><table>';
+            for (var key in feature.properties) {
+                if (feature.properties[key] !== null) {
+                    popupContent += '<tr><th>' + key + '</th><td>' + autolinker.link(String(feature.properties[key])) + '</td></tr>';
+                }
+            }
+            popupContent += '</table></div>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) { addClassToPopupIfMedia(content, e.popup); });
+            layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        map.createPane('pane_zone_chonburiepazone_0');
+        map.getPane('pane_zone_chonburiepazone_0').style.zIndex = 400;
+        var layer_zone_chonburiepazone_0 = new L.geoJson(json_zone_chonburiepazone_0, {
+            interactive: true, pane: 'pane_zone_chonburiepazone_0', onEachFeature: pop_zone_chonburiepazone_0,
+            style: function() { 
+                return { 
+                    pane: 'pane_zone_chonburiepazone_0', 
+                    opacity: 1, 
+                    color: 'rgba(255,0,0,1.0)',       
+                    weight: 2.5,                      
+                    fill: true, 
+                    fillOpacity: 0.7,                 
+                    fillColor: 'rgba(135,206,250,1.0)' 
+                }; 
+            }
+        });
+        bounds_group.addLayer(layer_zone_chonburiepazone_0);
+        map.addLayer(layer_zone_chonburiepazone_0);
+
+        var zoneMasterList = [
+            { id: 'บริเวณที่ 1', name: 'บริเวณที่ 1', color: 'rgba(255,211,127,1.0)' },
+            { id: 'บริเวณที่ 2', name: 'บริเวณที่ 2', color: 'rgba(115,223,255,1.0)' }
+        ];
+        var activeZones = { 'บริเวณที่ 1': true, 'บริเวณที่ 2': true };
+
+        var zoneMeasuresData = {
+            "บริเวณที่ 1": `
+                <h3><b>ข้อ 4 (1) บริเวณที่ 1 ได้แก่ พื้นที่บนแผ่นดินใหญ่ และพื้นที่เกาะล้าน เกาะครก และเกาะสาก</b></h3>
+                <p><b>มาตรการควบคุมการก่อสร้าง ดัดแปลง หรือเปลี่ยนการใช้อาคาร (ข้อ 5 และ ข้อ 6):</b></p>
+                <ul>
+                    <li><b>ข้อ 5 ห้ามก่อสร้าง ดัดแปลง หรือเปลี่ยนการใช้อาคารใด ๆ เป็น:</b>
+                        <ul>
+                            <li>(1) โรงงานทุกประเภทหรือทุกชนิด เว้นแต่พื้นที่ด้านตะวันออกของทางหลวงแผ่นดินหมายเลข 3 (ถนนสุขุมวิท) ให้มีได้เฉพาะโรงงานตามประเภท ชนิด หรือจำพวกที่กำหนดไว้ในบัญชี 1 ท้ายประกาศนี้ และต้องมีเครื่องจักรหรืออุปกรณ์ควบคุมมลพิษตามมาตรฐาน.</li>
+                            <li>(2) อาคารปศุสัตว์เพื่อการค้า เว้นแต่อาคารที่มีพื้นที่รวมกันไม่เกิน 200 ตารางเมตร มีระยะห่างจากแนวชายฝั่งทะเลไม่น้อยกว่า 1,000 เมตร และห่างจากแหล่งน้ำสาธารณะไม่น้อยกว่า 30 เมตร พร้อมมีบ่อบำบัดมูลสัตว์และน้ำเสีย.</li>
+                            <li>(3) ฌาปนสถาน เว้นแต่เป็นการก่อสร้างทดแทนของเดิมบนพื้นที่เดิมและมีระบบควบคุมมลพิษ.</li>
+                        </ul>
+                    </li>
+                    <li><b>ข้อ 6 หลักเกณฑ์การก่อสร้างอาคารในพื้นที่ต่างๆ:</b>
+                        <ul>
+                            <li><b>พื้นที่ 20 เมตรจากแนวชายฝั่งทะเล:</b> ห้ามก่อสร้างหรือดัดแปลงอาคารใดๆ เว้นแต่อาคารระบบสาธารณูปโภคหรืออาคารราชการเพื่อรักษาความปลอดภัย/ท่องเที่ยวที่มีความสูงไม่เกิน 4 เมตร พื้นที่รวมไม่เกิน 24 ตร.ม. (คลุมดินต่อหลังไม่เกิน 6 ตร.ม.) และมีพื้นที่ว่างไม่น้อยกว่าร้อยละ 75.</li>
+                            <li><b>พื้นที่ 100 เมตรจากระดับน้ำทะเลปานกลาง:</b> ให้ทำได้เฉพาะอาคารที่มีความสูงไม่เกิน 14 เมตร ต้องมีที่ว่างไม่น้อยกว่าร้อยละ 75 และมีพื้นที่สีเขียวไม่น้อยกว่าร้อยละ 50 ของที่ว่าง.</li>
+                            <li><b>พื้นที่บนเกาะล้าน เกาะครก และเกาะสาก:</b> ให้ทำได้เฉพาะอาคารที่มีความสูงไม่เกิน 9 เมตร ต้องมีที่ว่างไม่น้อยกว่าร้อยละ 75 และมีพื้นที่สีเขียวไม่น้อยกว่าร้อยละ 50 ของที่ว่าง.</li>
+                            <li><b>พื้นที่ลาดชัน 20% ถึง 35%:</b> บนแผ่นดินใหญ่สูงไม่เกิน 12 เมตร / บนเกาะสูงไม่เกิน 9 เมตร (เนื้อที่ดินตั้งแต่ 100 ตร.วาขึ้นไป อาคารคลุมดินไม่เกิน 90 ตร.ม., ที่ว่างซึมผ่านได้ >= 70%, พื้นที่สีเขียว >= 50% ของที่ว่าง; เนื้อที่น้อยกว่า 100 ตร.วา อาคารคลุมดินไม่เกิน 70 ตร.ม., ที่ว่างซึมผ่านได้ >= 50%, พื้นที่สีเขียว >= 50% ของที่ว่าง).</li>
+                            <li><b>พื้นที่ลาดชันเกิน 35% ขึ้นไป:</b> ห้ามก่อสร้างหรือดัดแปลงอาคารใด ๆ.</li>
+                            <li><b>พื้นที่ภายใน 5 เมตรจากแนวริมฝั่งแม่น้ำลำคลอง:</b> ห้ามก่อสร้างหรือดัดแปลงอาคารใด ๆ เว้นแต่เพื่อประโยชน์สาธารณะ.</li>
+                        </ul>
+                    </li>
+                    <li><b>ข้อ 8 กิจกรรมที่ต้องห้ามในพื้นที่:</b>
+                        <ul>
+                            <li>การทำเหมืองแร่, การขุด ตัก หรือดูด กรวด ดิน Hินผุ ทราย หรือลูกรังเพื่อการค้า หรือในพื้นที่ลาดชันเกิน 35% หรือลึกเกิน 3 เมตร.</li>
+                            <li>การขนส่งวัตถุอันตรายโดยใช้ระบบท่อขนส่ง, การถมปรับพื้นที่ปิดกั้นทางน้ำ.</li>
+                            <li>การปล่อยทิ้งของเสียหรือมลพิษลงสู่แหล่งน้ำหรือทะเล เว้นแต่ผ่านการบำบัดตามมาตรฐาน.</li>
+                            <li>การจับหรือครอบครองปลาสวยงามตามบัญชี 2 ท้ายประกาศ.</li>
+                            <li>การประกอบกิจการเรือภัตตาคาร เรือสถานบริการ หรือการเดินท่องเที่ยวใต้ทะเล (Sea Walker) เว้นแต่ได้รับอนุญาตจากท้องถิ่นและคณะกรรมการ.</li>
+                            <li>การเล่นเรือสกู๊ตเตอร์ เจ็ตสกี สกีน้ำ หรือเรือลากทุกชนิด ยกเว้นในบริเวณที่ท้องถิ่นกำหนด.</li>
+                            <li>การเพาะเลี้ยงกุ้งเพื่อการค้า (เว้นแต่กิจการเดิมที่ขึ้นทะเบียนไว้แล้ว), การจัดสรรที่ดินเพื่ออุตสาหกรรม.</li>
+                        </ul>
+                    </li>
+                </ul>
+            `,
+            "บริเวณที่ 2": `
+                <h3><b>ข้อ 4 (2) บริเวณที่ 2 ได้แก่ พื้นที่น่านน้ำทะเล</b></h3>
+                <p><b>มาตรการคุ้มครองสิ่งแวดล้อมในพื้นที่น่านน้ำทะเล (ข้อ 8 และข้ออื่นๆ):</b></p>
+                <ul>
+                    <li><b>ข้อ 8 กิจกรรมที่ต้องห้ามในน่านน้ำทะเล:</b>
+                        <ul>
+                            <li>(5) การขุดลอกร่องน้ำ เว้นแต่เป็นการบำรุงรักษาทางน้ำ หรือเพื่อความปลอดภัยในการเดินเรือ.</li>
+                            <li>(6) การปลูกสร้างสิ่งล่วงล้ำลำน้ำ เว้นแต่ได้รับอนุญาตตามกฎหมายว่าด้วยการเดินเรือในน่านน้ำไทย.</li>
+                            <li>(9) การปล่อยทิ้งของเสียหรือมลพิษลงสู่แหล่งน้ำหรือทะเล เว้นแต่ได้ผ่านการบำบัดตามมาตรฐานที่กฎหมายกำหนดแล้ว.</li>
+                            <li>(10) การจับหรือครอบครองปลาสวยงามตามบัญชี 2 ท้ายประกาศ.</li>
+                            <li>(11) การทอดสมอเรือในแนวปะการัง.</li>
+                            <li>(12) การประกอบกิจการเรือภัตตาคาร เรือสถานบริการ หรือการเดินท่องเที่ยวใต้ทะเล (Sea Walker) เว้นแต่ในบริเวณที่เมืองพัทยาและองค์กรปกครองส่วนท้องถิ่นกำหนดให้เป็นเขตอนุญาต และต้องได้รับความเห็นชอบจากคณะกรรมการ โดยห้ามปล่อยของเสียลงทะเล.</li>
+                            <li>(13) การเล่นเรือสกู๊ตเตอร์ เจ็ตสกี สกีน้ำ หรือเรือลากทุกชนิด ยกเว้นในบริเวณที่เมืองพัทยาและองค์กรปกครองส่วนท้องถิ่นกำหนดให้เป็นเขตอนุญาต.</li>
+                            <li>(14) การเก็บ ทำลาย หรือกระทำด้วยประการใด ๆ ที่อาจเป็นอันตรายหรือมีผลกระทบต่อปะการัง ซากปะการัง Hินปะการัง หรือกัลปังหา.</li>
+                            <li>(16) การกระทำใด ๆ ที่เป็นการเปลี่ยนแปลงสภาพตามธรรมชาติของพื้นที่หาด.</li>
+                        </ul>
+                    </li>
+                </ul>
+            `
+        };
+
+        function showMeasureModal(zoneName) {
+            var modal = document.getElementById('measureModal');
+            var titleEl = document.getElementById('measureModalTitle');
+            var bodyEl = document.getElementById('measureModalBody');
+            
+            titleEl.textContent = '📄 มาตรการคุ้มครองสิ่งแวดล้อม: ' + zoneName;
+            bodyEl.innerHTML = zoneMeasuresData[zoneName] || '<p>ไม่พบข้อมูลมาตรการสำหรับบริเวณนี้</p>';
+            modal.style.display = 'block';
+        }
+
+        function showBothMeasuresModal() {
+            var modal = document.getElementById('measureModal');
+            var titleEl = document.getElementById('measureModalTitle');
+            var bodyEl = document.getElementById('measureModalBody');
+            
+            titleEl.textContent = '📄 มาตรการคุ้มครองสิ่งแวดล้อม: ทั้ง 2 บริเวณ (บริเวณที่ 1 และ บริเวณที่ 2)';
+            bodyEl.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    ${zoneMeasuresData["บริเวณที่ 1"] || ''}
+                </div>
+                <hr style="border: 0; border-top: 2px dashed #6f42c1; margin: 20px 0;">
+                <div>
+                    ${zoneMeasuresData["บริเวณที่ 2"] || ''}
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        function closeMeasureModal() {
+            var modal = document.getElementById('measureModal');
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('measureModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function pop_chonburiepazone_1(feature, layer) {
+            var p = feature.properties;
+            var allowedFields = ['PA_NAME', 'ZONE_AREA', 'PROV_NAM_T', 'REGION_T', 'LAW', 'ST_BOOK', 'NOTE'];
+            var labels = {
+                'PA_NAME': 'ชื่อพื้นที่',
+                'ZONE_AREA': 'บริเวณ',
+                'PROV_NAM_T': 'จังหวัด',
+                'REGION_T': 'ภูมิภาค',
+                'LAW': 'กฎหมาย/ประกาศ',
+                'ST_BOOK': 'ราชกิจจานุเบกษา',
+                'NOTE': 'หมายเหตุ'
+            };
+
+            var popupContent = '<div class="custom-popup-table"><table>';
+            allowedFields.forEach(function(key) {
+                if (p[key] !== null && p[key] !== undefined && p[key] !== '') {
+                    var labelName = labels[key] || key;
+                    popupContent += '<tr><th>' + labelName + '</th><td>' + autolinker.link(String(p[key])) + '</td></tr>';
+                }
+            });
+            popupContent += '</table></div>';
+
+            var zoneAreaVal = p['ZONE_AREA'] || 'บริเวณที่ 1';
+            var latlng = layer.getBounds ? layer.getBounds().getCenter() : null;
+            if (latlng) {
+                var lat = latlng.lat.toFixed(6);
+                var lng = latlng.lng.toFixed(6);
+                popupContent += '<div class="popup-btn-container">\
+                    <button onclick="showMeasureModal(\'' + zoneAreaVal + '\')" class="popup-btn popup-btn-measure">📋 แสดงมาตรการ' + zoneAreaVal + '</button>\
+                    <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + lat + ',' + lng + '" target="_blank" class="popup-btn popup-btn-sv">📷 เปิด Google Street View จุดนี้</a>\
+                    <a href="https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng + '" target="_blank" class="popup-btn popup-btn-gm">🗺️ เปิด Google Maps จุดนี้</a>\
+                    <a href="https://www.onep.go.th/wp-content/uploads/2020/08/2563-07-24-onep-announcement.pdf" target="_blank" class="popup-btn popup-btn-pdf">📄 อ่านประกาศกระทรวงฯ (PDF)</a>\
+                </div>';
+            }
+
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+            layer.on('popupopen', function(e) { addClassToPopupIfMedia(content, e.popup); });
+            layer.bindPopup(content, { maxHeight: 450 });
+        }
+
+        function style_chonburiepazone_1_0(feature) {
+            var zoneVal = String(feature.properties['ZONE_AREA']);
+            if (activeZones[zoneVal] === false) {
+                return { opacity: 0, fillOpacity: 0, interactive: false };
+            }
+            var customOpac = document.getElementById('opacitySlider') ? parseFloat(document.getElementById('opacitySlider').value) : 1.0;
+            switch(zoneVal) {
+                case 'บริเวณที่ 1':
+                    return { pane: 'pane_chonburiepazone_1', opacity: 1, color: 'rgba(35,35,35,1.0)', weight: 1.0, fill: true, fillOpacity: customOpac, fillColor: 'rgba(255,211,127,1.0)', interactive: true };
+                case 'บริเวณที่ 2':
+                    return { pane: 'pane_chonburiepazone_1', opacity: 1, color: 'rgba(35,35,35,1.0)', weight: 1.0, fill: true, fillOpacity: customOpac, fillColor: 'rgba(115,223,255,1.0)', interactive: true };
+                default:
+                    return { pane: 'pane_chonburiepazone_1', opacity: 1, color: 'rgba(35,35,35,1.0)', weight: 1.0, fill: true, fillOpacity: customOpac, fillColor: 'rgba(200,200,200,1.0)', interactive: true };
+            }
+        }
+
+        var dissolvedFeatures = [];
+        if (typeof json_chonburiepazone1_0 !== 'undefined' && json_chonburiepazone1_0.features) {
+            dissolvedFeatures = dissolvedFeatures.concat(json_chonburiepazone1_0.features);
+        }
+        if (typeof json_chonburiepazone2_1 !== 'undefined' && json_chonburiepazone2_1.features) {
+            dissolvedFeatures = dissolvedFeatures.concat(json_chonburiepazone2_1.features);
+        }
+        var dissolvedData = { "type": "FeatureCollection", "features": dissolvedFeatures };
+
+        map.createPane('pane_chonburiepazone_1');
+        map.getPane('pane_chonburiepazone_1').style.zIndex = 401;
+        var layer_chonburiepazone_1 = new L.geoJson(dissolvedData, {
+            interactive: true, pane: 'pane_chonburiepazone_1', onEachFeature: pop_chonburiepazone_1, style: style_chonburiepazone_1_0
+        });
+        bounds_group.addLayer(layer_chonburiepazone_1);
+        map.addLayer(layer_chonburiepazone_1);
+
+        var isDrawingActive = false;
+        var isClickPinMode = false;
+
+        function toggleClickPinMode() {
+            isClickPinMode = !isClickPinMode;
+            var btn = document.getElementById('btnTogglePinMode');
+            if (isClickPinMode) {
+                btn.style.backgroundColor = '#d32f2f';
+                btn.textContent = '📍 ปิดโหมดคลิกปักหมุดด่วน (กำลังเปิดใช้งาน)';
+                map.getContainer().style.cursor = 'crosshair';
+            } else {
+                btn.style.backgroundColor = '#e65100';
+                btn.textContent = '📍 เปิดโหมดคลิกปักหมุดด่วน (ปิดอยู่)';
+                map.getContainer().style.cursor = '';
+            }
+        }
+
+        map.on('draw:drawstart', function() { isDrawingActive = true; });
+        map.on('draw:drawstop', function() { setTimeout(function() { isDrawingActive = false; }, 200); });
+
+        map.on('click', function(e) {
+            if (isDrawingActive) return;
+
+            if (isClickPinMode) {
+                var defaultName = 'หมุดปักใหม่';
+                var customName = prompt("ระบุชื่อหมุด:", defaultName);
+                if (customName === null) return;
+                if (!customName.trim()) customName = defaultName;
+
+                var customNote = prompt("ระบุหมายเหตุเพิ่มเติม (ถ้ามี):", "-");
+                if (customNote === null) customNote = "-";
+                if (!customNote.trim()) customNote = "-";
+
+                var marker = L.marker(e.latlng, {
+                    icon: L.divIcon({
+                        className: 'custom-drawn-marker',
+                        html: `<div style="color: #2196f3; font-size: 24px; text-shadow: 0 1px 3px rgba(0,0,0,0.4);"><i class="fas fa-map-marker"></i></div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 24]
+                    })
+                });
+
+                marker.featureProperties = {
+                    name: customName,
+                    note: customNote,
+                    color: '#ffeb3b',
+                    fillColor: '#ffeb3b',
+                    fillOpacity: 0.5,
+                    opacity: 1.0,
+                    dashArray: 'solid',
+                    symbol: 'marker',
+                    size: 24,
+                    markerColor: '#2196f3'
+                };
+
+                if (marker.dragging && typeof marker.dragging.enable === 'function') {
+                    marker.dragging.enable();
+                    marker.on('dragend', function() {
+                        bindPopupToDrawnLayer(marker);
+                        if (marker.isPopupOpen && marker.isPopupOpen()) {
+                            marker.openPopup();
+                        }
+                    });
+                }
+
+                bindPopupToDrawnLayer(marker);
+                drawnItems.addLayer(marker);
+                updateDrawnItemList();
+                marker.openPopup();
+                return;
+            }
+
+            var pt = turf.point([e.latlng.lng, e.latlng.lat]);
+            var isInside = false;
+
+            if (typeof dissolvedData !== 'undefined' && dissolvedData.features) {
+                dissolvedData.features.forEach(function(feat) {
+                    try {
+                        if (turf.booleanPointInPolygon(pt, feat)) {
+                            isInside = true;
+                        }
+                    } catch(err) {}
+                });
+            }
+
+            if (!isInside) {
+                var lat = e.latlng.lat.toFixed(6);
+                var lng = e.latlng.lng.toFixed(6);
+                var outsideContent = '<div style="font-weight: bold; margin-bottom: 6px; color: #555; text-align: center;">📍 พิกัดนอกเขตพื้นที่คุ้มครอง</div>' +
+                    '<div class="popup-btn-container" style="margin-top: 0;">\
+                        <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + lat + ',' + lng + '" target="_blank" class="popup-btn popup-btn-sv">📷 เปิด Google Street View จุดนี้</a>\
+                        <a href="https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng + '" target="_blank" class="popup-btn popup-btn-gm">🗺️ เปิด Google Maps จุดนี้</a>\
+                        <a href="https://www.onep.go.th/wp-content/uploads/2020/08/2563-07-24-onep-announcement.pdf" target="_blank" class="popup-btn popup-btn-pdf">📄 อ่านประกาศกระทรวงฯ (PDF)</a>\
+                    </div>';
+
+                L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(outsideContent)
+                    .openOn(map);
+            }
+        });
+
+        function pop_AMPHOE_T_2(feature, layer) {
+            var p = feature.properties;
+            layer.bindPopup(`<b>อำเภอ:</b> ${p['AMPHOE_T'] || '-'}`);
+        }
+        map.createPane('pane_AMPHOE_T_2');
+        map.getPane('pane_AMPHOE_T_2').style.zIndex = 403;
+        var layer_AMPHOE_T_2 = new L.geoJson(json_AMPHOE_T_2, {
+            interactive: true, pane: 'pane_AMPHOE_T_2', onEachFeature: pop_AMPHOE_T_2,
+            style: function() { return { pane: 'pane_AMPHOE_T_2', opacity: 1, color: 'rgba(255,0,8,1.0)', weight: 2.0, fillOpacity: 0 }; }
+        });
+        bounds_group.addLayer(layer_AMPHOE_T_2);
+        map.addLayer(layer_AMPHOE_T_2);
+
+        function pop_TAM_NAM_T_3(feature, layer) {
+            var p = feature.properties;
+            layer.bindPopup(`<b>ตำบล:</b> ${p['TAM_NAM_T'] || '-'}`);
+        }
+        map.createPane('pane_TAM_NAM_T_3');
+        map.getPane('pane_TAM_NAM_T_3').style.zIndex = 404;
+        var layer_TAM_NAM_T_3 = new L.geoJson(json_TAM_NAM_T_3, {
+            interactive: true, pane: 'pane_TAM_NAM_T_3', onEachFeature: pop_TAM_NAM_T_3,
+            style: function() { return { pane: 'pane_TAM_NAM_T_3', opacity: 1, color: 'rgba(255,0,8,1.0)', weight: 1.0, fillOpacity: 0 }; }
+        });
+        bounds_group.addLayer(layer_TAM_NAM_T_3);
+        map.addLayer(layer_TAM_NAM_T_3);
+
+        var allowedAdministrativeData = {
+            "อำเภอบางละมุง": ["ตำบลนาเกลือ", "ตำบลหนองปรือ", "ตำบลโป่ง", "ตำบลห้วยใหญ่", "ตำบลหนองปลาไหล", "เขตการปกครองพิเศษ (พัทยา)"],
+            "อำเภอสัตหีบ": ["ตำบลนาจอมเทียน"]
+        };
+
+        function initAdministrativeFilters() {
+            var amphoeSelect = document.getElementById('amphoeFilter');
+            if (!amphoeSelect) return;
+            amphoeSelect.innerHTML = '<option value="">-- กรุณาเลือกอำเภอ --</option>';
+            Object.keys(allowedAdministrativeData).forEach(function(amp) {
+                var opt = document.createElement('option');
+                opt.value = amp;
+                opt.textContent = amp;
+                amphoeSelect.appendChild(opt);
+            });
+        }
+        initAdministrativeFilters();
+
+        function onAmphoeChange() {
+            var amphoeSelect = document.getElementById('amphoeFilter');
+            var tambonSelect = document.getElementById('tambonFilter');
+            var selectedAmp = amphoeSelect.value;
+            tambonSelect.innerHTML = '<option value="">-- กรุณาเลือกตำบล --</option>';
+            if (!selectedAmp || !allowedAdministrativeData[selectedAmp]) {
+                tambonSelect.disabled = true;
+                return;
+            }
+            allowedAdministrativeData[selectedAmp].forEach(function(tam) {
+                var opt = document.createElement('option');
+                opt.value = tam;
+                opt.textContent = tam;
+                tambonSelect.appendChild(opt);
+            });
+            tambonSelect.disabled = false;
+        }
+        function onTambonChange() {}
+
+        var searchHighlightLayer = null;
+        function confirmAdministrativeFilter() {
+            var amphoeSelect = document.getElementById('amphoeFilter');
+            var tambonSelect = document.getElementById('tambonFilter');
+            var selAmp = amphoeSelect ? amphoeSelect.value : "";
+            var selTam = tambonSelect ? tambonSelect.value : "";
+
+            if (!selAmp) { alert("กรุณาเลือกอำเภอก่อนค้นหา"); return; }
+            if (searchHighlightLayer) { map.removeLayer(searchHighlightLayer); searchHighlightLayer = null; }
+
+            var targetBounds = null;
+            var targetName = "";
+
+            if (selTam && selTam !== "เขตการปกครองพิเศษ (พัทยา)") {
+                targetName = selTam;
+                if (typeof json_TAM_NAM_T_3 !== 'undefined' && json_TAM_NAM_T_3.features) {
+                    var foundFeature = json_TAM_NAM_T_3.features.find(function(f) {
+                        var p = f.properties;
+                        var tName = p['TAM_NAM_T'] || p['T_NAMT'] || p['TAMBONG'] || p['TAMBON_T'] || p['T_NAME'] || p['TAM_NAM'] || p['NAME'] || p['TAMBOL_TH'] || "";
+                        return tName.includes(selTam.replace("ตำบล", ""));
+                    });
+                    if (foundFeature) {
+                        var tempLayer = L.geoJson(foundFeature);
+                        targetBounds = tempLayer.getBounds();
+                        searchHighlightLayer = L.geoJson(foundFeature, {
+                            style: { color: '#0d47a1', weight: 4, fill: true, fillColor: '#00e5ff', fillOpacity: 0.4 }
+                        }).addTo(map);
+                    }
+                }
+            } else if (selTam === "เขตการปกครองพิเศษ (พัทยา)") {
+                targetName = "เขตการปกครองพิเศษ (พัทยา)";
+                if (typeof json_TAM_NAM_T_3 !== 'undefined' && json_TAM_NAM_T_3.features) {
+                    var pattayaFeatures = json_TAM_NAM_T_3.features.filter(function(f) {
+                        var p = f.properties;
+                        var tName = p['TAM_NAM_T'] || p['T_NAMT'] || p['TAMBONG'] || p['TAMBON_T'] || p['T_NAME'] || p['TAM_NAM'] || p['NAME'] || p['TAMBOL_TH'] || "";
+                        return tName.includes("พัทยา") || tName.includes("เมืองพัทยา");
+                    });
+                    if (pattayaFeatures.length > 0) {
+                        var collection = { "type": "FeatureCollection", "features": pattayaFeatures };
+                        var tempLayer = L.geoJson(collection);
+                        targetBounds = tempLayer.getBounds();
+                        searchHighlightLayer = L.geoJson(collection, {
+                            style: { color: '#0d47a1', weight: 4, fill: true, fillColor: '#00e5ff', fillOpacity: 0.4 }
+                        }).addTo(map);
+                    }
+                }
+            }
+
+            if (!targetBounds && selAmp) {
+                targetName = selAmp;
+                if (typeof json_AMPHOE_T_2 !== 'undefined' && json_AMPHOE_T_2.features) {
+                    var foundAmpFeature = json_AMPHOE_T_2.features.find(function(f) {
+                        var p = f.properties;
+                        var aName = p['AMPHOE_T'] || p['AMP_NAM_T'] || p['A_NAMT'] || p['AMPHOE'] || p['A_NAME'] || p['AMP_NAM'] || p['AMPHOE_TH'] || p['NAME'] || "";
+                        return aName.includes(selAmp.replace("อำเภอ", ""));
+                    });
+                    if (foundAmpFeature) {
+                        var tempLayer2 = L.geoJson(foundAmpFeature);
+                        targetBounds = tempLayer2.getBounds();
+                        searchHighlightLayer = L.geoJson(foundAmpFeature, {
+                            style: { color: '#0d47a1', weight: 4, fill: true, fillColor: '#00e5ff', fillOpacity: 0.4 }
+                        }).addTo(map);
+                    }
+                }
+            }
+
+            if (targetBounds) {
+                map.fitBounds(targetBounds, { maxZoom: 16 });
+                if (searchHighlightLayer) {
+                    var center = targetBounds.getCenter();
+                    searchHighlightLayer.bindTooltip(`<b>${targetName}</b>`, {
+                        permanent: true, direction: 'center', className: 'search-highlight-label'
+                    }).openTooltip(center);
+                }
+            } else {
+                alert("ไม่พบขอบเขตพื้นที่ที่ระบุในระบบแผนที่");
+            }
+        }
+
+        function resetAdministrativeFilters() {
+            var amphoeSelect = document.getElementById('amphoeFilter');
+            var tambonSelect = document.getElementById('tambonFilter');
+            if (amphoeSelect) amphoeSelect.value = "";
+            if (tambonSelect) {
+                tambonSelect.innerHTML = '<option value="">-- กรุณาเลือกอำเภอก่อน --</option>';
+                tambonSelect.disabled = true;
+            }
+            if (searchHighlightLayer) { map.removeLayer(searchHighlightLayer); searchHighlightLayer = null; }
+            map.fitBounds([[12.787915752642528,100.60754598576767],[13.079212668914575,101.10087425796372]]);
+        }
+
+        function toggleOverlayLayer(layerKey, isChecked) {
+            if (layerKey === 'landsman') {
+                if (isChecked) { if (typeof landParcelWMS !== 'undefined' && !map.hasLayer(landParcelWMS)) map.addLayer(landParcelWMS); }
+                else { if (typeof landParcelWMS !== 'undefined' && map.hasLayer(landParcelWMS)) map.removeLayer(landParcelWMS); }
+            }
+            if (layerKey === 'zone') isChecked ? map.addLayer(layer_zone_chonburiepazone_0) : map.removeLayer(layer_zone_chonburiepazone_0);
+            if (layerKey === 'pazone') isChecked ? map.addLayer(layer_chonburiepazone_1) : map.removeLayer(layer_chonburiepazone_1);
+            if (layerKey === 'amphoe') isChecked ? map.addLayer(layer_AMPHOE_T_2) : map.removeLayer(layer_AMPHOE_T_2);
+            if (layerKey === 'tambon') isChecked ? map.addLayer(layer_TAM_NAM_T_3) : map.removeLayer(layer_TAM_NAM_T_3);
+            if (layerKey === 'drawn') { isChecked ? drawnItems.addTo(map) : map.removeLayer(drawnItems); }
+        }
+
+        function buildZoneFilterUI() {
+            var container = document.getElementById('zoneFilterList');
+            if (!container) return;
+            container.innerHTML = '';
+            zoneMasterList.forEach(function(z) {
+                var item = document.createElement('label');
+                item.className = 'zone-filter-item';
+                item.innerHTML = `<input type="checkbox" value="${z.id}" checked onchange="onZoneCheckboxChange(this)"><span class="color-dot" style="background-color: ${z.color};"></span><span>${z.name}</span>`;
+                container.appendChild(item);
+            });
+            updateSelectAllState();
+        }
+        buildZoneFilterUI();
+
+        function onZoneCheckboxChange(chk) {
+            activeZones[chk.value] = chk.checked;
+            layer_chonburiepazone_1.setStyle(style_chonburiepazone_1_0);
+            updateSelectAllState();
+        }
+
+        function toggleSelectAllZones(masterChk) {
+            var isChecked = masterChk.checked;
+            zoneMasterList.forEach(function(z) { activeZones[z.id] = isChecked; });
+            var checkboxes = document.querySelectorAll('#zoneFilterList input[type="checkbox"]');
+            checkboxes.forEach(function(cb) { cb.checked = isChecked; });
+            layer_chonburiepazone_1.setStyle(style_chonburiepazone_1_0);
+        }
+
+        function updateSelectAllState() {
+            var masterChk = document.getElementById('selectAllZones');
+            if (!masterChk) return;
+            var allChecked = true;
+            zoneMasterList.forEach(function(z) { if (!activeZones[z.id]) allChecked = false; });
+            masterChk.checked = allChecked;
+        }
+
+        var opacitySlider = document.getElementById('opacitySlider');
+        var opacityValueText = document.getElementById('opacityValueText');
+        if (opacitySlider) {
+            opacitySlider.addEventListener('input', function() {
+                var val = parseFloat(this.value);
+                if (opacityValueText) opacityValueText.textContent = Math.round(val * 100) + '%';
+                if (typeof layer_chonburiepazone_1 !== 'undefined') {
+                    layer_chonburiepazone_1.setStyle(style_chonburiepazone_1_0);
+                }
+            });
+        }
+
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            position: 'topleft',
+            draw: {
+                polygon: { allowIntersection: false, showArea: true },
+                polyline: true,
+                rectangle: true,
+                circle: false,
+                marker: true,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: drawnItems,
+                remove: true
+            }
+        });
+        map.addControl(drawControl);
+
+        function getDefaultLayerName(type) {
+            if (!type) return 'แปลงโครงการที่กำหนด';
+            var t = type.toLowerCase();
+            if (t.includes('polygon') || t.includes('rectangle') || t.includes('multipolygon')) {
+                return 'แปลงโครงการที่กำหนด';
+            } else if (t.includes('line') || t.includes('polyline') || t.includes('linestring')) {
+                return 'เส้นโครงการที่กำหนด';
+            } else if (t.includes('point') || t.includes('marker')) {
+                return 'หมุดโครงการที่กำหนด';
+            }
+            return 'แปลงโครงการที่กำหนด';
+        }
+
+        function formatThaiArea(sqm) {
+            var rai = Math.floor(sqm / 1600);
+            var remRai = sqm % 1600;
+            var ngan = Math.floor(remRai / 400);
+            var remNgan = remRai % 400;
+            var sqWa = remNgan / 4;
+            return `${rai} ไร่ ${ngan} งาน ${sqWa.toFixed(2)} ตร.วา (${sqm.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ตร.ม.)`;
+        }
+
+        // ฟังก์ชันตรวจสอบและผูก Popup พร้อมคำนวณพิกัด ตำบล อำเภอ และมาตรการสิ่งแวดล้อมแบบเรียลไทม์ (แก้ไขให้ดึงข้อมูล geometry สำหรับการดราฟและปักหมุดครั้งแรกได้สมบูรณ์ทันที)[cite: 11]
+        function bindPopupToDrawnLayer(layer) {
+            var p = layer.featureProperties || {};
+            var name = p.name || 'แปลงโครงการที่กำหนด';
+            var note = p.note || '-';
+
+            var lng, lat, geojson;
+
+            if (layer instanceof L.Marker) {
+                var ll = layer.getLatLng();
+                lat = ll.lat;
+                lng = ll.lng;
+                geojson = {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [lng, lat]
+                    },
+                    properties: p
+                };
+            } else {
+                try {
+                    geojson = layer.toGeoJSON();
+                } catch(e) {
+                    geojson = null;
+                }
+                if (!geojson || !geojson.geometry) {
+                    if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                        var latlngs = layer.getLatLngs();
+                        var coords = (latlngs && latlngs[0]) ? latlngs[0].map(function(ll) { return [ll.lng, ll.lat]; }) : [];
+                        if (coords.length > 0 && (coords[0][0] !== coords[coords.length-1][0] || coords[0][1] !== coords[coords.length-1][1])) {
+                            coords.push(coords[0]);
+                        }
+                        geojson = {
+                            type: "Feature",
+                            geometry: {
+                                type: "Polygon",
+                                coordinates: [coords]
+                            },
+                            properties: p
+                        };
+                    } else if (layer instanceof L.Polyline) {
+                        var latlngs = layer.getLatLngs();
+                        var coords = latlngs ? latlngs.map(function(ll) { return [ll.lng, ll.lat]; }) : [];
+                        geojson = {
+                            type: "Feature",
+                            geometry: {
+                                type: "LineString",
+                                coordinates: coords
+                            },
+                            properties: p
+                        };
+                    }
+                }
+
+                var centerPt;
+                try {
+                    centerPt = turf.center(geojson);
+                    lng = centerPt.geometry.coordinates[0];
+                    lat = centerPt.geometry.coordinates[1];
+                } catch(err) {
+                    var bounds = layer.getBounds ? layer.getBounds() : null;
+                    if (bounds) {
+                        var center = bounds.getCenter();
+                        lat = center.lat;
+                        lng = center.lng;
+                    } else {
+                        lat = 13.0; lng = 100.9;
+                    }
+                }
+            }
+
+            var latStr = lat.toFixed(6);
+            var lngStr = lng.toFixed(6);
+            var checkPt = turf.point([lng, lat]);
+
+            proj4.defs("EPSG:32647", "+proj=utm +zone=47 +datum=WGS84 +units=m +no_defs");
+            var utmCoord = proj4("EPSG:4326", "EPSG:32647", [lng, lat]);
+            var easting = utmCoord[0].toFixed(2);
+            var northing = utmCoord[1].toFixed(2);
+
+            var areaHtml = '';
+            if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                try {
+                    var areaSqm = turf.area(geojson);
+                    areaHtml = `<div style="margin-bottom: 4px;"><b>ขนาดพื้นที่:</b> ${formatThaiArea(areaSqm)}</div>`;
+                } catch(err) {
+                    areaHtml = `<div style="margin-bottom: 4px;"><b>ขนาดพื้นที่:</b> ไม่สามารถคำนวณได้</div>`;
+                }
+            } else if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+                try {
+                    var lengthM = turf.length(geojson, {units: 'meters'});
+                    areaHtml = `<div style="margin-bottom: 4px;"><b>ความยาว:</b> ${lengthM.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} เมตร</div>`;
+                } catch(err) {
+                    areaHtml = `<div style="margin-bottom: 4px;"><b>ความยาว:</b> ไม่สามารถคำนวณได้</div>`;
+                }
+            }
+
+            var intersectedTambons = [];
+            var intersectedAmphoes = [];
+
+            // ตรวจสอบ ตำบล (รองรับชื่อฟิลด์หลากหลายจากข้อมูลขอบเขตตำบล)
+            if (typeof json_TAM_NAM_T_3 !== 'undefined' && json_TAM_NAM_T_3.features) {
+                json_TAM_NAM_T_3.features.forEach(function(feat) {
+                    try {
+                        var intersects = false;
+                        if (turf.booleanPointInPolygon(checkPt, feat)) {
+                            intersects = true;
+                        } else if (!(layer instanceof L.Marker) && turf.booleanIntersects(geojson, feat)) {
+                            intersects = true;
+                        }
+                        if (intersects) {
+                            var p = feat.properties;
+                            var tName = p['TAM_NAM_T'] || p['T_NAMT'] || p['TAMBONG'] || p['TAMBON_T'] || p['T_NAME'] || p['TAM_NAM'] || p['NAME'] || p['TAMBOL_TH'] || p['TAMBON'] || "";
+                            if (tName && !intersectedTambons.includes(tName)) {
+                                intersectedTambons.push(tName);
+                            }
+                        }
+                    } catch(err) {}
+                });
+            }
+
+            // ตรวจสอบ อำเภอ (รองรับชื่อฟิลด์หลากหลายจากข้อมูลขอบเขตอำเภอ)
+            if (typeof json_AMPHOE_T_2 !== 'undefined' && json_AMPHOE_T_2.features) {
+                json_AMPHOE_T_2.features.forEach(function(feat) {
+                    try {
+                        var intersects = false;
+                        if (turf.booleanPointInPolygon(checkPt, feat)) {
+                            intersects = true;
+                        } else if (!(layer instanceof L.Marker) && turf.booleanIntersects(geojson, feat)) {
+                            intersects = true;
+                        }
+                        if (intersects) {
+                            var p = feat.properties;
+                            var aName = p['AMPHOE_T'] || p['AMP_NAM_T'] || p['A_NAMT'] || p['AMPHOE'] || p['A_NAME'] || p['AMP_NAM'] || p['AMPHOE_TH'] || p['NAME'] || "";
+                            if (aName && !intersectedAmphoes.includes(aName)) {
+                                intersectedAmphoes.push(aName);
+                            }
+                        }
+                    } catch(err) {}
+                });
+            }
+
+            var tambonStr = intersectedTambons.length > 0 ? intersectedTambons.join(', ') : '-';
+            var amphoeStr = intersectedAmphoes.length > 0 ? intersectedAmphoes.join(', ') : '-';
+
+            var intersectedZones = [];
+            if (typeof dissolvedData !== 'undefined' && dissolvedData.features) {
+                dissolvedData.features.forEach(function(feat) {
+                    try {
+                        var intersects = false;
+                        if (turf.booleanPointInPolygon(checkPt, feat)) {
+                            intersects = true;
+                        } else if (!(layer instanceof L.Marker) && turf.booleanIntersects(geojson, feat)) {
+                            intersects = true;
+                        }
+                        if (intersects) {
+                            var zName = feat.properties['ZONE_AREA'];
+                            if (zName && !intersectedZones.includes(zName)) {
+                                intersectedZones.push(zName);
+                            }
+                        }
+                    } catch(err) {}
+                });
+            }
+
+            var zoneCheckHtml = '';
+            if (intersectedZones.length > 0) {
+                zoneCheckHtml += `<div style="background: #eef9ff; border: 1px solid #bce8f1; border-radius: 6px; padding: 8px; margin-top: 8px;">`;
+                zoneCheckHtml += `<div style="font-weight: bold; color: #0056b3; margin-bottom: 4px; font-size: 12px;">🏛️ ตรวจสอบกฎหมาย:</div>`;
+                zoneCheckHtml += `<div style="font-size: 11px; margin-bottom: 6px;">อยู่ในเขต: <b style="color: #d9534f;">${intersectedZones.join(', ')}</b></div>`;
+                
+                intersectedZones.forEach(function(zName) {
+                    zoneCheckHtml += `
+                        <div style="background: #fff; border: 1px solid #ffeeba; border-radius: 4px; padding: 6px; margin-bottom: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 11px; font-weight: bold; color: #856404;" onclick="showMeasureModal('${zName}')">
+                                <span>⚠️ มาตรการ${zName}</span>
+                                <span>▼</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (intersectedZones.includes("บริเวณที่ 1") && intersectedZones.includes("บริเวณที่ 2")) {
+                    zoneCheckHtml += `<button onclick="showBothMeasuresModal()" class="popup-btn" style="background-color: #6f42c1; margin-top: 6px; margin-bottom: 6px; font-size: 11px; width: 100%;">📋 อ่านมาตรการทั้ง 2 บริเวณ</button>`;
+                }
+
+                zoneCheckHtml += `<a href="https://www.onep.go.th/wp-content/uploads/2020/08/2563-07-24-onep-announcement.pdf" target="_blank" class="popup-btn popup-btn-pdf" style="margin-top: 4px;">📄 อ่านรายละเอียดตามประกาศกระทรวงฯ เพิ่มเติม</a>`;
+                zoneCheckHtml += `</div>`;
+            } else {
+                zoneCheckHtml += `<div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 8px; margin-top: 8px; font-size: 11px; color: #666;">`;
+                zoneCheckHtml += `🏛️ <b>ตรวจสอบกฎหมาย:</b> อยู่นอกเขตพื้นที่คุ้มครองสิ่งแวดล้อม`;
+                zoneCheckHtml += `</div>`;
+            }
+
+            var popupContent = `
+                <div style="font-family: sans-serif; font-size: 12px; min-width: 260px; max-width: 320px;">
+                    <div style="font-weight: bold; font-size: 14px; color: #333; margin-bottom: 2px;">📌 ${name}</div>
+                    <div style="font-size: 11px; color: #666; margin-bottom: 6px;">หมายเหตุ: ${note}</div>
+                    <hr style="border: 0; border-top: 1px solid #ddd; margin: 6px 0;">
+                    <div style="margin-bottom: 3px;"><b>Lat/Lng:</b> ${latStr}, ${lngStr}</div>
+                    <div style="margin-bottom: 3px;"><b>UTM (47N):</b> E ${easting}, N ${northing}</div>
+                    <div style="margin-bottom: 6px;"><b>ตำบล:</b> ${tambonStr} | <b>อำเภอ:</b> ${amphoeStr}</div>
+                    ${areaHtml}
+                    ${zoneCheckHtml}
+                    <div style="margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px;">
+                        <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px; color: #555;">📥 ส่งออกไฟล์เฉพาะแปลงนี้:</div>
+                        <div style="display: flex; gap: 4px;">
+                            <button onclick='exportSingleFeatureGeoJSON(${JSON.stringify(geojson)})' class="popup-btn" style="background-color: #007bff; flex: 1; padding: 4px; font-size: 11px;">GeoJSON</button>
+                            <button onclick='exportSingleFeatureKML(${JSON.stringify(geojson)})' class="popup-btn" style="background-color: #17a2b8; flex: 1; padding: 4px; font-size: 11px;">KML</button>
+                            <button onclick='exportSingleFeatureSHP(${JSON.stringify(geojson)})' class="popup-btn" style="background-color: #28a745; flex: 1; padding: 4px; font-size: 11px;">Shapefile</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            layer.bindPopup(popupContent, { maxHeight: 450 });
+        }
+
+        function exportSingleFeatureGeoJSON(geojson) {
+            var featureCollection = { type: "FeatureCollection", features: [geojson] };
+            var blob = new Blob([JSON.stringify(featureCollection)], {type: 'application/json'});
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = (geojson.properties && geojson.properties.name ? geojson.properties.name : 'feature') + '.geojson';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportSingleFeatureKML(geojson) {
+            try {
+                var featureCollection = { type: "FeatureCollection", features: [geojson] };
+                var kmlStr = tokml(featureCollection);
+                var blob = new Blob([kmlStr], {type: 'application/vnd.google-earth.kml+xml'});
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = (geojson.properties && geojson.properties.name ? geojson.properties.name : 'feature') + '.kml';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch(err) { alert("ไม่สามารถแปลงเป็น KML ได้"); }
+        }
+
+        function exportSingleFeatureSHP(geojson) {
+            try {
+                var featureCollection = { type: "FeatureCollection", features: [geojson] };
+                shpwrite.download(featureCollection, {
+                    folder: 'feature_shp',
+                    types: { point: 'points', polygon: 'polygons', polyline: 'lines' }
+                });
+            } catch(err) { alert("ไม่สามารถส่งออก Shapefile ได้"); }
+        }
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            var layerType = e.layerType;
+            var defaultName = getDefaultLayerName(layerType);
+
+            var customName = prompt("ระบุชื่อรูปทรง/ชื่อโครงการ:", defaultName);
+            if (customName === null) return;
+            if (!customName.trim()) customName = defaultName;
+
+            var customNote = prompt("ระบุหมายเหตุเพิ่มเติม (ถ้ามี):", "-");
+            if (customNote === null) customNote = "-";
+            if (!customNote.trim()) customNote = "-";
+
+            layer.featureProperties = {
+                name: customName,
+                note: customNote,
+                color: '#ffeb3b',
+                fillColor: '#ffeb3b',
+                fillOpacity: 0.5,
+                opacity: 1.0,
+                dashArray: 'solid',
+                symbol: 'marker',
+                size: 24,
+                markerColor: '#2196f3'
+            };
+
+            if (layer instanceof L.Marker) {
+                if (layer.dragging && typeof layer.dragging.enable === 'function') {
+                    layer.dragging.enable();
+                }
+                layer.on('dragend', function() {
+                    bindPopupToDrawnLayer(layer);
+                    if (layer.isPopupOpen && layer.isPopupOpen()) {
+                        layer.openPopup();
+                    }
+                });
+            }
+
+            applyLayerStyle(layer);
+            bindPopupToDrawnLayer(layer);
+            drawnItems.addLayer(layer);
+            updateDrawnItemList();
+
+            setTimeout(function() {
+                if (layer.openPopup) {
+                    if (layer instanceof L.Marker) {
+                        layer.openPopup();
+                    } else if (layer.getBounds) {
+                        layer.openPopup(layer.getBounds().getCenter());
+                    } else {
+                        layer.openPopup();
+                    }
+                }
+            }, 100);
+        });
+
+        map.on(L.Draw.Event.EDITED, function (e) {
+            e.layers.eachLayer(function(layer) {
+                bindPopupToDrawnLayer(layer);
+                if (layer.isPopupOpen && layer.isPopupOpen()) {
+                    layer.openPopup();
+                }
+            });
+            updateDrawnItemList();
+        });
+        map.on(L.Draw.Event.DELETED, function () { updateDrawnItemList(); });
+
+        function applyLayerStyle(layer) {
+            var p = layer.featureProperties;
+            if (!p) return;
+            if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                layer.setStyle({
+                    color: p.color,
+                    fillColor: p.fillColor,
+                    fillOpacity: p.fillOpacity,
+                    opacity: p.opacity !== undefined ? p.opacity : 1.0,
+                    weight: 2
+                });
+            } else if (layer instanceof L.Polyline) {
+                var dash = null;
+                if (p.dashArray === 'dashed') dash = '8, 8';
+                else if (p.dashArray === 'dotted') dash = '3, 6';
+                layer.setStyle({
+                    color: p.color,
+                    opacity: p.opacity,
+                    dashArray: dash,
+                    weight: 3
+                });
+            } else if (layer instanceof L.Marker) {
+                var sz = p.size || 24;
+                var col = p.markerColor || '#2196f3';
+                var sym = p.symbol || 'marker';
+                var faClass = 'fa-map-marker';
+                if (sym === 'flag') faClass = 'fa-flag';
+                else if (sym === 'star') faClass = 'fa-star';
+                else if (sym === 'home') faClass = 'fa-home';
+
+                var iconHtml = '';
+                if (sym === 'circle') {
+                    iconHtml = `<div style="background: ${col}; width: ${sz}px; height: ${sz}px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); opacity: ${p.opacity};"></div>`;
+                } else {
+                    iconHtml = `<div style="color: ${col}; font-size: ${sz}px; text-shadow: 0 1px 3px rgba(0,0,0,0.4); opacity: ${p.opacity};"><i class="fas ${faClass}"></i></div>`;
+                }
+
+                var customIcon = L.divIcon({
+                    className: 'custom-drawn-marker',
+                    html: iconHtml,
+                    iconSize: [sz, sz],
+                    iconAnchor: [sz/2, sz]
+                });
+                layer.setIcon(customIcon);
+            }
+        }
+
+        function updateDrawnItemList() {
+            var container = document.getElementById('drawnItemList');
+            var countEl = document.getElementById('drawnItemCount');
+            if (!container) return;
+            container.innerHTML = '';
+            var layers = drawnItems.getLayers();
+            if (countEl) countEl.textContent = layers.length;
+
+            if (layers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #888; font-size: 11px; padding: 10px;">ยังไม่มีข้อมูลรูปทรง</div>';
+                return;
+            }
+
+            layers.forEach(function(layer, idx) {
+                if (!layer.featureProperties) {
+                    var defaultName = 'แปลงโครงการที่กำหนด';
+                    if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) defaultName = 'เส้นโครงการที่กำหนด';
+                    if (layer instanceof L.Marker) defaultName = 'หมุดโครงการที่กำหนด';
+
+                    layer.featureProperties = {
+                        name: defaultName,
+                        note: '-',
+                        color: '#ffeb3b',
+                        fillColor: '#ffeb3b',
+                        fillOpacity: 0.5,
+                        opacity: 1.0,
+                        dashArray: 'solid',
+                        symbol: 'marker',
+                        size: 24,
+                        markerColor: '#2196f3'
+                    };
+                }
+
+                if (layer instanceof L.Marker && layer.dragging && !layer._hasDragEvent) {
+                    if (typeof layer.dragging.enable === 'function') {
+                        layer.dragging.enable();
+                    }
+                    layer.on('dragend', function() {
+                        bindPopupToDrawnLayer(layer);
+                        if (layer.isPopupOpen && layer.isPopupOpen()) {
+                            layer.openPopup();
+                        }
+                    });
+                    layer._hasDragEvent = true;
+                }
+
+                var p = layer.featureProperties;
+                var card = document.createElement('div');
+                card.className = 'drawn-item-card';
+
+                var typeIcon = '🔷';
+                if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) typeIcon = '📏';
+                if (layer instanceof L.Marker) typeIcon = '📍';
+
+                let innerHtml = `
+                    <div class="drawn-item-header">
+                        <div style="display: flex; align-items: center; gap: 4px; flex-grow: 1; min-width: 0;">
+                            <span style="flex-shrink: 0; font-size: 13px;">${typeIcon}</span>
+                            <input type="text" value="${p.name}" title="${p.name}" style="border:none; border-bottom:1px solid #ccc; font-weight:bold; font-size: 12px; width: 100%; background:transparent; min-width: 0;" onchange="updateDrawnName(${idx}, this.value)" oninput="this.title=this.value">
+                        </div>
+                        <div style="display: flex; gap: 2px; flex-shrink: 0;">
+                            <button class="btn-sm-action" onclick="zoomToDrawnItem(${idx})" title="ซูม">🔍</button>
+                            <button class="btn-sm-action" style="color: red;" onclick="removeDrawnItem(${idx})" title="ลบ">🗑️</button>
+                        </div>
+                    </div>
+                `;
+
+                if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                    innerHtml += `
+                        <div class="drawn-control-row">
+                            <label>สีเส้น:</label>
+                            <input type="color" value="${p.color}" oninput="updateDrawnProp(${idx}, 'color', this.value)">
+                            <label>สีพื้น:</label>
+                            <input type="color" value="${p.fillColor}" oninput="updateDrawnProp(${idx}, 'fillColor', this.value)">
+                        </div>
+                        <div class="drawn-control-row">
+                            <label>ความจางพื้น:</label>
+                            <input type="range" min="0" max="1" step="0.01" value="${p.fillOpacity}" oninput="updateDrawnPropRealtime(${idx}, 'fillOpacity', parseFloat(this.value), this)">
+                            <span id="fillOpText_${idx}" style="font-size:10px; width:35px; text-align:right;">${Math.round(p.fillOpacity * 100)}%</span>
+                        </div>
+                    `;
+                } else if (layer instanceof L.Polyline) {
+                    innerHtml += `
+                        <div class="drawn-control-row">
+                            <label>สีเส้น:</label>
+                            <input type="color" value="${p.color}" oninput="updateDrawnProp(${idx}, 'color', this.value)">
+                            <label>รูปแบบเส้น:</label>
+                            <select onchange="updateDrawnProp(${idx}, 'dashArray', this.value)">
+                                <option value="solid" ${p.dashArray==='solid'?'selected':''}>เส้นทึบ</option>
+                                <option value="dashed" ${p.dashArray==='dashed'?'selected':''}>เส้นประ</option>
+                                <option value="dotted" ${p.dashArray==='dotted'?'selected':''}>เส้นไข่ปลา</option>
+                            </select>
+                        </div>
+                        <div class="drawn-control-row">
+                            <label>ความจางเส้น:</label>
+                            <input type="range" min="0" max="1" step="0.01" value="${p.opacity}" oninput="updateDrawnPropRealtime(${idx}, 'opacity', parseFloat(this.value), this)">
+                            <span id="opText_${idx}" style="font-size:10px; width:35px; text-align:right;">${Math.round(p.opacity * 100)}%</span>
+                        </div>
+                    `;
+                } else if (layer instanceof L.Marker) {
+                    innerHtml += `
+                        <div class="drawn-control-row">
+                            <label>สีหมุด:</label>
+                            <input type="color" value="${p.markerColor}" oninput="updateDrawnProp(${idx}, 'markerColor', this.value)">
+                            <label>สัญลักษณ์:</label>
+                            <select onchange="updateDrawnProp(${idx}, 'symbol', this.value)">
+                                <option value="marker" ${p.symbol==='marker'?'selected':''}>หมุดปัก</option>
+                                <option value="flag" ${p.symbol==='flag'?'selected':''}>ธง</option>
+                                <option value="star" ${p.symbol==='star'?'selected':''}>ดาว</option>
+                                <option value="home" ${p.symbol==='home'?'selected':''}>บ้าน</option>
+                                <option value="circle" ${p.symbol==='circle'?'selected':''}>จุดกลม</option>
+                            </select>
+                        </div>
+                        <div class="drawn-control-row">
+                            <label>ขนาด:</label>
+                            <input type="range" min="12" max="48" step="1" value="${p.size}" oninput="updateDrawnPropRealtime(${idx}, 'size', parseInt(this.value), this)">
+                            <span id="sizeText_${idx}" style="font-size:10px; width:35px; text-align:right;">${p.size}px</span>
+                        </div>
+                        <div class="drawn-control-row">
+                            <label>ความจาง:</label>
+                            <input type="range" min="0" max="1" step="0.01" value="${p.opacity}" oninput="updateDrawnPropRealtime(${idx}, 'opacity', parseFloat(this.value), this)">
+                            <span id="opText_${idx}" style="font-size:10px; width:35px; text-align:right;">${Math.round(p.opacity * 100)}%</span>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = innerHtml;
+                container.appendChild(card);
+            });
+        }
+
+        function updateDrawnName(idx, val) {
+            var layers = drawnItems.getLayers();
+            if (layers[idx] && layers[idx].featureProperties) {
+                layers[idx].featureProperties.name = val;
+                bindPopupToDrawnLayer(layers[idx]);
+            }
+        }
+
+        function updateDrawnProp(idx, prop, val) {
+            var layers = drawnItems.getLayers();
+            if (layers[idx] && layers[idx].featureProperties) {
+                layers[idx].featureProperties[prop] = val;
+                applyLayerStyle(layers[idx]);
+            }
+        }
+
+        function updateDrawnPropRealtime(idx, prop, val, sliderEl) {
+            var layers = drawnItems.getLayers();
+            if (layers[idx] && layers[idx].featureProperties) {
+                layers[idx].featureProperties[prop] = val;
+                applyLayerStyle(layers[idx]);
+
+                var txtSpan = sliderEl.parentNode.querySelector('span[id^="fillOpText_"], span[id^="opText_"], span[id^="sizeText_"]');
+                if (txtSpan) {
+                    if (prop === 'size') {
+                        txtSpan.textContent = val + 'px';
+                    } else {
+                        txtSpan.textContent = Math.round(val * 100) + '%';
+                    }
+                }
+            }
+        }
+
+        function zoomToDrawnItem(idx) {
+            var layers = drawnItems.getLayers();
+            if (layers[idx]) {
+                var layer = layers[idx];
+                if (layer.getBounds) { map.fitBounds(layer.getBounds(), { maxZoom: 18 }); }
+                else if (layer.getLatLng) { map.setView(layer.getLatLng(), 18); }
+            }
+        }
+
+        function removeDrawnItem(idx) {
+            var layers = drawnItems.getLayers();
+            if (layers[idx]) {
+                drawnItems.removeLayer(layers[idx]);
+                updateDrawnItemList();
+            }
+        }
+
+        function zoomToAllDrawn() {
+            if (drawnItems.getLayers().length > 0) {
+                map.fitBounds(drawnItems.getBounds(), { maxZoom: 18 });
+            }
+        }
+
+        function clearAllDrawnItems() {
+            if (confirm("ต้องการล้างรูปทรงทั้งหมดใช่หรือไม่?")) {
+                drawnItems.clearLayers();
+                updateDrawnItemList();
+            }
+        }
+
+        var searchMarker = null;
+        function searchCoordinates() {
+            var val = document.getElementById('coordInput').value.trim();
+            if (!val) return;
+            var parts = val.split(',');
+            var lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
+            if (isNaN(lat) || isNaN(lng)) {
+                alert("กรุณากรอกรูปแบบพิกัดให้ถูกต้อง เช่น 13.3611, 100.9847");
+                return;
+            }
+            if (searchMarker) map.removeLayer(searchMarker);
+            
+            searchMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'custom-drawn-marker',
+                    html: `<div style="color: #2196f3; font-size: 24px; text-shadow: 0 1px 3px rgba(0,0,0,0.4);"><i class="fas fa-map-marker"></i></div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24]
+                })
+            });
+
+            searchMarker.featureProperties = {
+                name: 'พิกัดค้นหา: ' + lat + ', ' + lng,
+                note: 'ค้นหาจากช่องพิกัด',
+                color: '#ffeb3b',
+                fillColor: '#ffeb3b',
+                fillOpacity: 0.5,
+                opacity: 1.0,
+                dashArray: 'solid',
+                symbol: 'marker',
+                size: 24,
+                markerColor: '#2196f3'
+            };
+
+            bindPopupToDrawnLayer(searchMarker);
+            drawnItems.addLayer(searchMarker);
+            updateDrawnItemList();
+
+            map.setView([lat, lng], 17);
+            searchMarker.openPopup();
+        }
+
+        function importGISData(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var fileName = file.name.toLowerCase();
+            var reader = new FileReader();
+
+            if (fileName.endsWith('.geojson') || fileName.endsWith('.json')) {
+                reader.onload = function(e) {
+                    try {
+                        var data = JSON.parse(e.target.result);
+                        L.geoJson(data, {
+                            onEachFeature: function(feature, layer) {
+                                var geomType = layer instanceof L.Polygon ? 'polygon' : (layer instanceof L.Polyline ? 'polyline' : 'marker');
+                                var customName = (feature.properties && (feature.properties.name || feature.properties.NAME || feature.properties.Title)) ? (feature.properties.name || feature.properties.NAME || feature.properties.Title) : getDefaultLayerName(geomType);
+                                var customNote = (feature.properties && (feature.properties.note || feature.properties.NOTE || feature.properties.REMARK)) ? (feature.properties.note || feature.properties.NOTE || feature.properties.REMARK) : '-';
+                                
+                                layer.featureProperties = {
+                                    name: customName,
+                                    note: customNote,
+                                    color: '#ffeb3b',
+                                    fillColor: '#ffeb3b',
+                                    fillOpacity: 0.5,
+                                    opacity: 1.0,
+                                    dashArray: 'solid',
+                                    symbol: 'marker',
+                                    size: 24,
+                                    markerColor: '#2196f3'
+                                };
+                                applyLayerStyle(layer);
+                                bindPopupToDrawnLayer(layer);
+                                drawnItems.addLayer(layer);
+                            }
+                        });
+                        updateDrawnItemList();
+                        alert("นำเข้าข้อมูล GeoJSON สำเร็จ!");
+                    } catch (err) { alert("เกิดข้อผิดพลาดในการอ่านไฟล์ GeoJSON"); }
+                };
+                reader.readAsText(file);
+            } else if (fileName.endsWith('.kml')) {
+                reader.onload = function(e) {
+                    try {
+                        var dom = new DOMParser().parseFromString(e.target.result, 'text/xml');
+                        var converted = toGeoJSON.kml(dom);
+                        L.geoJson(converted, {
+                            onEachFeature: function(feature, layer) {
+                                var geomType = layer instanceof L.Polygon ? 'polygon' : (layer instanceof L.Polyline ? 'polyline' : 'marker');
+                                var customName = (feature.properties && (feature.properties.name || feature.properties.NAME)) ? (feature.properties.name || feature.properties.NAME) : getDefaultLayerName(geomType);
+                                var customNote = (feature.properties && (feature.properties.note || feature.properties.NOTE)) ? (feature.properties.note || feature.properties.NOTE) : '-';
+
+                                layer.featureProperties = {
+                                    name: customName,
+                                    note: customNote,
+                                    color: '#ffeb3b',
+                                    fillColor: '#ffeb3b',
+                                    fillOpacity: 0.5,
+                                    opacity: 1.0,
+                                    dashArray: 'solid',
+                                    symbol: 'marker',
+                                    size: 24,
+                                    markerColor: '#2196f3'
+                                };
+                                applyLayerStyle(layer);
+                                bindPopupToDrawnLayer(layer);
+                                drawnItems.addLayer(layer);
+                            }
+                        });
+                        updateDrawnItemList();
+                        alert("นำเข้าข้อมูล KML สำเร็จ!");
+                    } catch (err) { alert("เกิดข้อผิดพลาดในการอ่านไฟล์ KML"); }
+                };
+                reader.readAsText(file);
+            } else if (fileName.endsWith('.zip')) {
+                reader.onload = function(e) {
+                    shp(e.target.result).then(function(data) {
+                        L.geoJson(data, {
+                            onEachFeature: function(feature, layer) {
+                                var geomType = layer instanceof L.Polygon ? 'polygon' : (layer instanceof L.Polyline ? 'polyline' : 'marker');
+                                var customName = (feature.properties && (feature.properties.name || feature.properties.NAME || feature.properties.REMARK)) ? (feature.properties.name || feature.properties.NAME || feature.properties.REMARK) : getDefaultLayerName(geomType);
+                                var customNote = (feature.properties && (feature.properties.note || feature.properties.NOTE)) ? (feature.properties.note || feature.properties.NOTE) : '-';
+
+                                layer.featureProperties = {
+                                    name: customName,
+                                    note: customNote,
+                                    color: '#ffeb3b',
+                                    fillColor: '#ffeb3b',
+                                    fillOpacity: 0.5,
+                                    opacity: 1.0,
+                                    dashArray: 'solid',
+                                    symbol: 'marker',
+                                    size: 24,
+                                    markerColor: '#2196f3'
+                                };
+                                applyLayerStyle(layer);
+                                bindPopupToDrawnLayer(layer);
+                                drawnItems.addLayer(layer);
+                            }
+                        });
+                        updateDrawnItemList();
+                        alert("นำเข้าข้อมูล Shapefile (ZIP) สำเร็จ!");
+                    }).catch(function(err) { alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Shapefile ZIP"); });
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert("รองรับเฉพาะไฟล์ .geojson, .json, .kml และ .zip (Shapefile) เท่านั้น");
+            }
+            event.target.value = '';
+        }
+
+        document.getElementById('btn-export-all').addEventListener('click', function() {
+            var format = document.getElementById('exportFormatSelect').value;
+            var data = drawnItems.toGeoJSON();
+            if (!data.features || data.features.length === 0) {
+                alert("ไม่มีข้อมูลรูปทรงสำหรับส่งออก");
+                return;
+            }
+
+            if (format === 'geojson') {
+                var blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'chonburi_drawn_data.geojson';
+                a.click();
+                URL.revokeObjectURL(url);
+            } else if (format === 'kml') {
+                try {
+                    var kmlStr = tokml(data);
+                    var blob = new Blob([kmlStr], {type: 'application/vnd.google-earth.kml+xml'});
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'chonburi_drawn_data.kml';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } catch(err) { alert("ไม่สามารถแปลงเป็น KML ได้"); }
+            } else if (format === 'shp') {
+                try {
+                    shpwrite.download(data, {
+                        folder: 'chonburi_shp',
+                        types: { point: 'points', polygon: 'polygons', polyline: 'lines' }
+                    });
+                } catch(err) { alert("ไม่สามารถส่งออก Shapefile ได้"); }
+            }
+        });
+
+        map.addControl(new L.Control.Search({
+            layer: layer_chonburiepazone_1,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'ZONE_AREA'
+        }));
+        
+        if (document.getElementsByClassName('search-button').length > 0) {
+            document.getElementsByClassName('search-button')[0].className += ' fa fa-binoculars';
+        }
+        </script>
+    </body>
+</html>
