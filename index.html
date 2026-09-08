@@ -1,0 +1,257 @@
+<!DOCTYPE html> 
+<html lang="th"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>หน้าแรก - ระบบแผนที่สารสนเทศภูมิศาสตร์ พื้นที่คุ้มครองสิ่งแวดล้อม</title> 
+    <style> 
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Sarabun', 'Prompt', sans-serif; 
+        } 
+         
+        body, html { 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+        } 
+         
+        .landing-container { 
+            width: 100vw; 
+            height: 100vh; 
+            background-image: url('ภาพปกหน้าเว็ป_2.jpg');  
+            background-size: cover;  
+            background-position: center; 
+            background-repeat: no-repeat; 
+            display: flex; 
+            align-items: center; 
+            padding-left: 10%; 
+            position: relative; 
+            overflow: hidden; /* ป้องกันภาพขยายแล้วล้นออกนอกจอ */
+            /* เพิ่มแอนิเมชันขยับพื้นหลัง (ซูมเข้า-ออกช้าๆ อย่างนุ่มนวล) */
+            animation: bgZoomMotion 20s ease-in-out infinite alternate;
+        } 
+
+        /* คีย์เฟรมควบคุมการขยายและขยับของภาพพื้นหลัง */
+        @keyframes bgZoomMotion {
+            0% {
+                background-size: 100% 100%;
+                background-position: center center;
+            }
+            50% {
+                background-size: 108% 108%; /* ขยายใหญ่ขึ้นเล็กน้อย 8% */
+                background-position: 52% 48%; /* ขยับมุมมองเล็กน้อยให้ดูมีมิติ */
+            }
+            100% {
+                background-size: 100% 100%;
+                background-position: center center;
+            }
+        }
+         
+        .content-box { 
+            max-width: 700px; 
+            animation: fadeSlideIn 1.5s ease-out forwards; 
+            opacity: 0; 
+            position: relative; 
+            z-index: 10; 
+        } 
+         
+        .content-box h1 { 
+            font-size: 3rem; 
+            color: #0c4a34; 
+            line-height: 1.4; 
+            margin-bottom: 10px; 
+            font-weight: bold; 
+        } 
+         
+        .content-box p { 
+            font-size: 1.5rem; 
+            color: #2b7a5f; 
+            margin-bottom: 40px; 
+        } 
+         
+        /* =========================================
+           ตกแต่งปุ่มและแอนิเมชัน
+           ========================================= */
+        .enter-btn {
+            display: inline-block;
+            padding: 16px 40px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #ffffff;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 2px solid #d4af37;
+            border-radius: 50px;
+            text-decoration: none;
+            position: relative;
+            transition: all 0.3s ease;
+            z-index: 1;
+            animation: glowAura 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glowAura {
+            0% {
+                box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3), 
+                            0 0 10px rgba(212, 175, 55, 0.3);
+            }
+            100% {
+                box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4), 
+                            0 0 25px rgba(212, 175, 55, 0.9), 
+                            0 0 45px rgba(212, 175, 55, 0.6); 
+            }
+        }
+
+        .enter-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: transparent;
+            z-index: -1; 
+            box-shadow: 
+                -110px -30px 0 1px #ffffff,
+                 120px -25px 0 1px #d4af37,
+                 100px  35px 0 0px #ffffff,
+                -90px  30px 0 1px #d4af37,
+                   0px -45px 0 1px #ffffff,
+                 -40px  40px 0 0px #d4af37,
+                  50px  40px 0 1px #ffffff;
+            animation: twinkling 1.5s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes twinkling {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .enter-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50px;
+            background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%);
+            background-size: 300% 100%;
+            animation: shineBg 6s infinite; 
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @keyframes shineBg {
+            0% { background-position: 150% 0; }
+            40%, 100% { background-position: -50% 0; }
+        }
+
+        .enter-btn:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(135deg, #0d9f6e, #047857);
+            animation: none; 
+            box-shadow: 0 15px 25px rgba(16, 185, 129, 0.5), 
+                        0 0 35px rgba(212, 175, 55, 1), 
+                        0 0 60px rgba(212, 175, 55, 0.8);
+        }
+
+        /* =========================================
+           ส่วนแอนิเมชันใบไม้ร่วง (ตัดพื้นหลังสีขาวออก + ปรับสีให้อ่อนลง)
+           ========================================= */
+        .leaf-container {
+            position: absolute;
+            top: -10%;
+            z-index: 5;
+            animation: fall linear infinite, sway ease-in-out infinite alternate;
+        }
+
+        .leaf-img {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            mix-blend-mode: multiply; 
+            opacity: 0.75; 
+            animation: spinLeaf ease-in-out infinite alternate;
+            transform-origin: center;
+        }
+
+        /* กระจายตำแหน่ง ความเร็ว และรูปแบบใบไม้แต่ละใบ */
+        .leaf-container:nth-child(1) { left: 10%; animation-duration: 12s, 3s; animation-delay: 0s, 0s; }
+        .leaf-container:nth-child(1) .leaf-img { animation-duration: 3.2s; }
+
+        .leaf-container:nth-child(2) { left: 28%; animation-duration: 15s, 4.5s; animation-delay: 2s, 1s; }
+        .leaf-container:nth-child(2) .leaf-img { animation-duration: 4s; }
+
+        .leaf-container:nth-child(3) { left: 45%; animation-duration: 10s, 2.8s; animation-delay: 3.5s, 2s; }
+        .leaf-container:nth-child(3) .leaf-img { animation-duration: 2.6s; }
+
+        .leaf-container:nth-child(4) { left: 62%; animation-duration: 14s, 3.5s; animation-delay: 1s, 1.5s; }
+        .leaf-container:nth-child(4) .leaf-img { animation-duration: 3.5s; }
+
+        .leaf-container:nth-child(5) { left: 78%; animation-duration: 13s, 3.8s; animation-delay: 4s, 2.5s; }
+        .leaf-container:nth-child(5) .leaf-img { animation-duration: 3.8s; }
+
+        .leaf-container:nth-child(6) { left: 90%; animation-duration: 16s, 4s; animation-delay: 5s, 1.8s; }
+        .leaf-container:nth-child(6) .leaf-img { animation-duration: 4.2s; }
+
+        @keyframes fall {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 0.75; }
+            90% { opacity: 0.75; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        @keyframes sway {
+            0% { transform: translateX(0px); }
+            100% { transform: translateX(65px); }
+        }
+
+        @keyframes spinLeaf {
+            0% { transform: rotate(0deg) scale(0.85); }
+            100% { transform: rotate(360deg) scale(1.15); }
+        }
+         
+        @keyframes fadeSlideIn { 
+            0% { 
+                opacity: 0; 
+                transform: translateX(-30px); 
+            } 
+            100% { 
+                opacity: 1; 
+                transform: translateX(0); 
+            } 
+        } 
+         
+        @media (max-width: 768px) { 
+            .landing-container { 
+                padding-left: 5%; 
+                padding-right: 5%; 
+                background-position: left center; 
+            } 
+            .content-box h1 { font-size: 2rem; } 
+            .content-box p { font-size: 1.2rem; } 
+            .leaf-container { display: none; } 
+        }
+    </style> 
+</head> 
+<body> 
+    <div class="landing-container"> 
+        
+        <!-- ใบไม้ร่วง -->
+        <div class="leaf-container"><img src="leaf_1.jpg" class="leaf-img" alt="leaf"></div>
+        <div class="leaf-container"><img src="leaf_2.jpg" class="leaf-img" alt="leaf"></div>
+        <div class="leaf-container"><img src="leaf_3.jpg" class="leaf-img" alt="leaf"></div>
+        <div class="leaf-container"><img src="leaf_1.jpg" class="leaf-img" alt="leaf"></div>
+        <div class="leaf-container"><img src="leaf_2.jpg" class="leaf-img" alt="leaf"></div>
+        <div class="leaf-container"><img src="leaf_3.jpg" class="leaf-img" alt="leaf"></div>
+
+        <div class="content-box"> 
+            <h1>ระบบแผนที่สารสนเทศภูมิศาสตร์<br>พื้นที่คุ้มครองสิ่งแวดล้อม</h1> 
+            <p>สำนักงานนโยบายและแผนทรัพยากรธรรมชาติและสิ่งแวดล้อม (สผ.)</p> 
+             
+            <a href="webmap.html" target="_blank" rel="noopener noreferrer" class="enter-btn"> 
+                เข้าสู่เว็บไซต์ พื้นที่คุ้มครองสิ่งแวดล้อม
+            </a> 
+        </div> 
+    </div> 
+</body> 
+</html>
