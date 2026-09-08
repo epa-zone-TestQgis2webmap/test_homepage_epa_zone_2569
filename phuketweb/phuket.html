@@ -1596,48 +1596,80 @@ if (opacitySlider) {
             exportAllToKML(featureCollection, filename);
         }
 
-        function exportSingleFeature(layer, format) {
-            var geojson = layer.toGeoJSON();
-            var featName = geojson.properties && geojson.properties.name ? geojson.properties.name : "feature";
-
-            if (format === 'geojson') {
-                var singleGeoJSON = { "type": "FeatureCollection", "features": [geojson] };
-                var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(singleGeoJSON, null, 2));
-                var downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", featName + ".geojson");
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-            } else if (format === 'kml') {
-                exportToKML(geojson.geometry, featName + ".kml", geojson.properties);
-            } else if (format === 'shp') {
-    var singleGeoJSON = { "type": "FeatureCollection", "features": [geojson] };
-    try {
-        if (typeof shpwrite !== 'undefined' && shpwrite.zip) {
-            Promise.resolve(shpwrite.zip(singleGeoJSON, {
-                folder: featName,
-                types: { point: 'points', polygon: 'polygons', polyline: 'lines' },
-                outputType: 'base64'
-            })).then(function(base64Data) {
-                var downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", "data:application/zip;base64," + base64Data);
-                downloadAnchor.setAttribute("download", featName + ".zip");
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-            }).catch(function(err) {
-                alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
-            });
-        } else {
-            throw new Error("shpwrite library is not fully loaded");
+function exportSingleFeature(layer, format) {
+    var geojson = layer.toGeoJSON();
+    var featName = geojson.properties && geojson.properties.name ? geojson.properties.name : "feature";
+    if (format === 'geojson') {
+        var singleGeoJSON = { "type": "FeatureCollection", "features": [geojson] };
+        var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(singleGeoJSON, null, 2));
+        var downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", featName + ".geojson");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    } else if (format === 'kml') {
+        exportToKML(geojson.geometry, featName + ".kml", geojson.properties);
+    } else if (format === 'shp') {
+        var singleGeoJSON = encodePropertiesForShp({ "type": "FeatureCollection", "features": [geojson] }); // ✅ แก้ตรงนี้
+        try {
+            if (typeof shpwrite !== 'undefined' && shpwrite.zip) {
+                Promise.resolve(shpwrite.zip(singleGeoJSON, {
+                    folder: featName,
+                    types: { point: 'points', polygon: 'polygons', polyline: 'lines' },
+                    outputType: 'base64'
+                })).then(function(base64Data) {
+                    var downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", "data:application/zip;base64," + base64Data);
+                    downloadAnchor.setAttribute("download", featName + ".zip");
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                }).catch(function(err) {
+                    alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
+                });
+            } else {
+                throw new Error("shpwrite library is not fully loaded");
+            }
+        } catch (err) {
+            alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
         }
-    } catch (err) {
-        alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
     }
 }
-        }
 
+// แปลงข้อความ (เช่นภาษาไทย) ให้เป็น byte-string ที่ 1 ตัวอักษร = 1 ไบต์ UTF-8 พอดี
+// เพื่อแก้บั๊กของไลบรารี dbf เก่าที่คำนวณความกว้างฟิลด์ผิดกับข้อความ multi-byte
+function toUtf8ByteString(value) {
+    if (typeof value !== 'string') return value;
+    try { return unescape(encodeURIComponent(value)); }
+    catch (e) { return value; }
+}
+function fromUtf8ByteString(value) {
+    if (typeof value !== 'string') return value;
+    try { return decodeURIComponent(escape(value)); }
+    catch (e) { return value; }
+}
+function encodePropertiesForShp(geojson) {
+    var clone = JSON.parse(JSON.stringify(geojson));
+    var features = clone.type === 'FeatureCollection' ? clone.features : [clone];
+    features.forEach(function(f) {
+        if (!f || !f.properties) return;
+        Object.keys(f.properties).forEach(function(key) {
+            f.properties[key] = toUtf8ByteString(f.properties[key]);
+        });
+    });
+    return clone;
+}
+function decodePropertiesFromShp(geojson) {
+    if (!geojson || !geojson.features) return geojson;
+    geojson.features.forEach(function(f) {
+        if (!f || !f.properties) return;
+        Object.keys(f.properties).forEach(function(key) {
+            f.properties[key] = fromUtf8ByteString(f.properties[key]);
+        });
+    });
+    return geojson;
+}
         function bindDrawnItemPopup(layer, name, note) {
             var geojson = layer.toGeoJSON();
             geojson.properties = geojson.properties || {};
@@ -1836,7 +1868,7 @@ if (opacitySlider) {
 else if (format === 'shp') {
     try {
         if (typeof shpwrite !== 'undefined' && shpwrite.zip) {
-            Promise.resolve(shpwrite.zip(data, {
+            Promise.resolve(shpwrite.zip(encodePropertiesForShp(data), {   // ✅ ห่อ data ด้วย encodePropertiesForShp
                 folder: 'drawn_features',
                 types: { point: 'points', polygon: 'polygons', polyline: 'lines' },
                 outputType: 'base64'
@@ -1886,17 +1918,17 @@ else if (format === 'shp') {
                 };
                 reader.readAsText(file);
             } 
-            else if (fileName.endsWith('.zip')) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    shp(e.target.result).then(function(geojson) {
-                        processImportedGeoJSON(geojson);
-                    }).catch(function(err) {
-                        alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Shapefile (.zip): " + err.message);
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            } 
+else if (fileName.endsWith('.zip')) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        shp(e.target.result).then(function(geojson) {
+            processImportedGeoJSON(decodePropertiesFromShp(geojson)); // ✅ ถอดรหัสก่อนใช้งาน
+        }).catch(function(err) {
+            alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Shapefile (.zip): " + err.message);
+        });
+    };
+    reader.readAsArrayBuffer(file);
+} 
             else if (fileName.endsWith('.kml')) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
