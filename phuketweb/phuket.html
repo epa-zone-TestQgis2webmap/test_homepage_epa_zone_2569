@@ -521,7 +521,7 @@
         <script src="https://unpkg.com/@mapbox/togeojson@0.16.0/togeojson.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tokml/0.4.0/tokml.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-        <script src="https://unpkg.com/shp-write@latest/shpwrite.js"></script>
+        <script src="https://unpkg.com/@mapbox/shp-write@0.4.3/shpwrite.js"></script>
 
         <script>
             if (typeof json__0 === 'undefined') { var json__0 = { "type": "FeatureCollection", "features": [] }; }
@@ -1107,17 +1107,6 @@ if (opacitySlider) {
 
             searchMarker.bindPopup(popupContent, { autoPan: false }).openPopup();
         }
-
-        var measureControl = new L.Control.Measure({
-            position: 'topleft',
-            primaryLengthUnit: 'meters',
-            secondaryLengthUnit: 'kilometers',
-            primaryAreaUnit: 'sqmeters',
-            secondaryAreaUnit: 'hectares'
-        });
-        measureControl.addTo(map);
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
 
         var drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
