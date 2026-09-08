@@ -1612,20 +1612,30 @@ if (opacitySlider) {
             } else if (format === 'kml') {
                 exportToKML(geojson.geometry, featName + ".kml", geojson.properties);
             } else if (format === 'shp') {
-                var singleGeoJSON = { "type": "FeatureCollection", "features": [geojson] };
-                try {
-                    if (typeof shpwrite !== 'undefined' && shpwrite.download) {
-                        shpwrite.download(singleGeoJSON, {
-                            folder: featName,
-                            types: { point: 'points', polygon: 'polygons', polyline: 'lines' }
-                        });
-                    } else {
-                        throw new Error("shpwrite library is not fully loaded");
-                    }
-                } catch (err) {
-                    alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
-                }
-            }
+    var singleGeoJSON = { "type": "FeatureCollection", "features": [geojson] };
+    try {
+        if (typeof shpwrite !== 'undefined' && shpwrite.zip) {
+            Promise.resolve(shpwrite.zip(singleGeoJSON, {
+                folder: featName,
+                types: { point: 'points', polygon: 'polygons', polyline: 'lines' },
+                outputType: 'base64'
+            })).then(function(base64Data) {
+                var downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", "data:application/zip;base64," + base64Data);
+                downloadAnchor.setAttribute("download", featName + ".zip");
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            }).catch(function(err) {
+                alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
+            });
+        } else {
+            throw new Error("shpwrite library is not fully loaded");
+        }
+    } catch (err) {
+        alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
+    }
+}
         }
 
         function bindDrawnItemPopup(layer, name, note) {
@@ -1823,20 +1833,30 @@ if (opacitySlider) {
             else if (format === 'kml') {
                 exportAllToKML(data, 'drawn_features.kml');
             } 
-            else if (format === 'shp') {
-                try {
-                    if (typeof shpwrite !== 'undefined' && shpwrite.download) {
-                        shpwrite.download(data, {
-                            folder: 'drawn_features',
-                            types: { point: 'points', polygon: 'polygons', polyline: 'lines' }
-                        });
-                    } else {
-                        throw new Error("shpwrite library is not fully loaded");
-                    }
-                } catch (err) {
-                    alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
-                }
-            }
+else if (format === 'shp') {
+    try {
+        if (typeof shpwrite !== 'undefined' && shpwrite.zip) {
+            Promise.resolve(shpwrite.zip(data, {
+                folder: 'drawn_features',
+                types: { point: 'points', polygon: 'polygons', polyline: 'lines' },
+                outputType: 'base64'
+            })).then(function(base64Data) {
+                var downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", "data:application/zip;base64," + base64Data);
+                downloadAnchor.setAttribute("download", "drawn_features.zip");
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            }).catch(function(err) {
+                alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
+            });
+        } else {
+            throw new Error("shpwrite library is not fully loaded");
+        }
+    } catch (err) {
+        alert("เกิดข้อผิดพลาดในการสร้าง Shapefile: " + err.message);
+    }
+}
         }
 
         document.getElementById('btn-export-all').addEventListener('click', () => {
